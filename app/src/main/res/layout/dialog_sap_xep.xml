@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="340dp"
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    android:background="@drawable/bovuong"
+    android:orientation="vertical">
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sắp xếp theo"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:paddingBottom="8dp" />
+
+            <RadioGroup
+                android:id="@+id/dialog_FirstOrLast"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <RadioButton
+                    android:id="@+id/dialog_First_Name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="First name"
+                    android:checked="true"
+                    android:textSize="18sp"
+                    android:padding="4dp" />
+                <RadioButton
+                    android:id="@+id/dialog_Last_Name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Last name"
+                    android:textSize="18sp"
+                    android:padding="4dp" />
+
+            </RadioGroup>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"
+                android:layout_marginVertical="12dp" />
+
+            <RadioGroup
+                android:id="@+id/dialog_UpOrDown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <RadioButton
+                    android:id="@+id/dialog_Tang_Dan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tăng Dần"
+                    android:checked="true"
+                    android:textSize="18sp"
+                    android:padding="4dp" />
+
+                <RadioButton
+                    android:id="@+id/dialog_Giam_Dan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Giảm Dần"
+                    android:textSize="18sp"
+                    android:padding="4dp" />
+            </RadioGroup>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:paddingTop="16dp">
+
+                <TextView
+                    android:id="@+id/dialogSX_Huy_Bo"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:gravity="center"
+                    android:text="Hủy bỏ"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/holo_red_dark"
+                    android:layout_marginRight="25dp" />
+
+                <TextView
+                    android:id="@+id/dialogSX_OK"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:layout_marginRight="20dp"
+                    android:gravity="center"
+                    android:text="OK"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/holo_blue_dark" />
+            </LinearLayout>
+</LinearLayout>

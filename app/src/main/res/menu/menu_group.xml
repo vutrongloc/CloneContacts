@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:title="Nhập danh bạ từ tệp VCF"
+        android:id="@+id/menu_Group_NhapDanhBaTuTepVCF"/>
+    <item android:title="Xuất danh bạ từ tệp VCF"
+        android:id="@+id/menu_Group_XuatDanhBaTuTepVCF"/>
+    <item android:title="Cài đặt"
+        app:showAsAction="always"
+        android:icon="@drawable/setting"
+        android:id="@+id/menu_Group_CaiDat"/>
+    <item android:title="Vương miện"
+        app:showAsAction="always"
+        android:icon="@drawable/crown_24dp_e8eaed_fill0_wght400_grad0_opsz24"
+        android:id="@+id/menu_Group_VuongMien"/>
+</menu>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:title="Gửi SMS tới danh bạ"
+        android:id="@+id/menu_Favorites_LongClickMuch_GuiSMS"/>
+    <item android:title="Gửi Email tới danh bạ"
+        android:id="@+id/menu_Favorites_LongClickMuch_GuiEmail"/>
+    <item android:title="Chọn tất cả"
+        android:id="@+id/menu_Favorites_LongclickMuch_ChonTatCa"/>
+    <item android:title="Loại bỏ khỏi mục yêu thích"
+        android:id="@+id/menu_Favorites_LongclickMuch_LoaiBoKhoiMucYeuThich"/>
+    <item android:title="Thêm vào nhóm"
+        android:icon="@drawable/group_add"
+        android:id="@+id/menu_Favorites_LongClickMuch_ThemVaoNhom"
+        app:showAsAction="always"/>
+    <item android:title="Chia sẻ"
+        android:icon="@drawable/share"
+        android:id="@+id/menu_Favorites_LongClickMuch_ChiaSe"
+        app:showAsAction="always"/>
+</menu>

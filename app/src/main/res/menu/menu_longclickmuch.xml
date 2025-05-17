@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:title="Chia sẻ"
+        android:id="@+id/menu_LongClickMuch_ChiaSe"/>
+    <item android:title="Gửi SMS"
+        android:id="@+id/menu_LongClickMuch_GuiSMS"/>
+    <item android:title="Gửi Email"
+        android:id="@+id/menu_LongClickMuch_GuiEmail"/>
+    <item android:title="Bỏ chọn tất cả"
+        android:id="@+id/menu_LongClickMuch_boChonTatCa"/>
+    <item android:title="Xóa bỏ"
+        android:id="@+id/menu_LongClickMuch_XoaBo"/>
+    <item android:title="Đánh dấu yêu thích"
+        android:id="@+id/menu_LongClickMuch_DanhDauYeuThich"
+        android:icon="@drawable/star"
+        app:showAsAction="always"/>
+    <item android:title="Thêm vào group"
+        android:id="@+id/menu_LongClickMuch_ThemVaoGroup"
+        android:icon="@drawable/group_add"
+        app:showAsAction="always"/>
+</menu>

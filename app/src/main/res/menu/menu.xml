@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <group android:id="@+id/group1">
+        <item
+            android:id="@+id/sapXepTheo"
+            android:title="Sắp xếp theo"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/boLoc"
+            android:title="Bộ lọc"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/nhapDanhBaTuTep"
+            android:title="Nhập danh bạ từ tệp .vcf"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/xuatDanhBaTuTep"
+            android:title="Xuất danh bạ sang tệp .vcf"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/caiDat"
+            android:title="Cài đặt"
+            app:showAsAction="never" />
+    </group>
+
+    <item
+        android:id="@+id/vuongMien"
+        android:icon="@drawable/crown_24dp_e8eaed_fill0_wght400_grad0_opsz24"
+        android:title="TODO"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/timKiem"
+        android:icon="@drawable/search_24dp_e8eaed_fill0_wght400_grad0_opsz24"
+        android:title="TODO"
+        app:showAsAction="always" />
+</menu>
