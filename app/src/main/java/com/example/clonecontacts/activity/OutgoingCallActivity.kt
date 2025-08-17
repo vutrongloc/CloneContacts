@@ -117,11 +117,15 @@ class OutgoingCallActivity : AppCompatActivity() {
                     callStartTime = System.currentTimeMillis()
                     isCallActive = true
                     handler.post(updateTimerRunnable)
+
+                    // Tự bật loa khi vừa kết nối
+                    enableSpeaker()
                 }
                 callStatus.text = "Call Connected"
                 speakerButton.isEnabled = true
                 muteButton.isEnabled = true
             }
+
             Call.STATE_DISCONNECTED -> {
                 Log.d(TAG, "Call ended by remote party or system.")
                 isCallActive = false
@@ -173,13 +177,33 @@ class OutgoingCallActivity : AppCompatActivity() {
         }
     }
 
-    // Bật/tắt loa ngoài
+    // Bật loa ngoài
+    private fun enableSpeaker() {
+        if (!isCallActive) return
+        audioManager.mode = AudioManager.MODE_IN_CALL   // hoặc MODE_IN_COMMUNICATION tùy thiết bị
+        audioManager.isSpeakerphoneOn = true
+        speakerButton.text = "Tắt loa"
+    }
+
+    // Tắt loa ngoài
+    private fun disableSpeaker() {
+        if (!isCallActive) return
+        audioManager.mode = AudioManager.MODE_IN_CALL
+        audioManager.isSpeakerphoneOn = false
+        speakerButton.text = "Mở loa"
+    }
+
     private fun toggleSpeaker() {
         if (!isCallActive) return
-        val isSpeakerOn = audioManager.isSpeakerphoneOn
-        audioManager.isSpeakerphoneOn = !isSpeakerOn
-        speakerButton.text = if (audioManager.isSpeakerphoneOn) "Tắt loa" else "Mở loa"
+        if (audioManager.isSpeakerphoneOn) {
+            disableSpeaker()
+        } else {
+            enableSpeaker()
+        }
     }
+
+
+
 
     // Bật/tắt micro (tắt tiếng)
     private fun toggleMute() {
@@ -191,6 +215,8 @@ class OutgoingCallActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        audioManager.mode = AudioManager.MODE_NORMAL
+        audioManager.isSpeakerphoneOn = false
         LocalBroadcastManager.getInstance(this).unregisterReceiver(callStateReceiver)
         handler.removeCallbacks(updateTimerRunnable)
     }
@@ -199,4 +225,5 @@ class OutgoingCallActivity : AppCompatActivity() {
         private const val TAG = "OutgoingCallActivity"
         private const val PERMISSION_REQUEST_CODE = 1
     }
+
 }

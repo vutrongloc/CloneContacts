@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
+import android.telecom.TelecomManager
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -16,6 +17,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
@@ -32,6 +34,8 @@ import com.example.clonecontacts.Model.Group
 import com.example.clonecontacts.activity.MainActivity
 import com.example.clonecontacts.R
 import com.example.clonecontacts.Model.User
+import com.example.clonecontacts.activity.OutgoingCallActivity
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.util.Collections.swap
 
 class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
@@ -39,8 +43,8 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     var dsUserYeuThich: MutableList<User> = mutableListOf()
     lateinit var editTextTimKiem: EditText
     lateinit var adapter: DsAdapter
-    lateinit var keyboard:ImageView
-    lateinit var addContacts:ImageView
+    lateinit var keyboard: ImageView
+    lateinit var addContacts: ImageView
     private var textWatcher: TextWatcher? = null // Store the TextWatcher
 
     override fun onCreateView(
@@ -60,8 +64,7 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         timKiem()
         keyboard = view.findViewById<ImageView>(R.id.favorites_Keyboard)
         keyboard.setOnClickListener {
-            val intent = Intent(Intent.ACTION_DIAL)
-            startActivity(intent)
+            ChucNang().open_KeyBroad(requireActivity())
         }
 
         addContacts = view.findViewById<ImageView>(R.id.favorites_add)
@@ -69,9 +72,18 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
             themContactsYeuThich(dsUser_Favorites)
         }
     }
+
+
+
     fun yeuCauQuyenDayDu() {
-        val canReadContacts = ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.READ_CONTACTS)
-        val canWriteContacts = ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.WRITE_CONTACTS)
+        val canReadContacts = ContextCompat.checkSelfPermission(
+            requireContext(),
+            android.Manifest.permission.READ_CONTACTS
+        )
+        val canWriteContacts = ContextCompat.checkSelfPermission(
+            requireContext(),
+            android.Manifest.permission.WRITE_CONTACTS
+        )
 
         if (canReadContacts == PackageManager.PERMISSION_GRANTED && canWriteContacts == PackageManager.PERMISSION_GRANTED) {
             if (tangHoacGiam != null && firstOrLast != null) {
@@ -80,10 +92,22 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                 getContacts(tangHoacGiam, firstOrLast)
             }
         } else {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.READ_CONTACTS, android.Manifest.permission.WRITE_CONTACTS), 200)
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(
+                    android.Manifest.permission.READ_CONTACTS,
+                    android.Manifest.permission.WRITE_CONTACTS
+                ),
+                200
+            )
         }
     }
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 200) {
             if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
@@ -93,11 +117,23 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     getContacts(tangHoacGiam, firstOrLast)
                 }
             } else {
-                Toast.makeText(requireActivity(), "Cần cấp quyền đầy đủ để truy cập danh bạ", Toast.LENGTH_SHORT).show()
-                ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.READ_CONTACTS, android.Manifest.permission.WRITE_CONTACTS), 200)
+                Toast.makeText(
+                    requireActivity(),
+                    "Cần cấp quyền đầy đủ để truy cập danh bạ",
+                    Toast.LENGTH_SHORT
+                ).show()
+                ActivityCompat.requestPermissions(
+                    requireActivity(),
+                    arrayOf(
+                        android.Manifest.permission.READ_CONTACTS,
+                        android.Manifest.permission.WRITE_CONTACTS
+                    ),
+                    200
+                )
             }
         }
     }
+
     fun timKiem() {
         editTextTimKiem = requireActivity().findViewById<EditText>(R.id.main_EdittextTimKiem)
         val nutThoat = requireActivity().findViewById<ImageView>(R.id.main_Back)
@@ -149,9 +185,10 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
             }
         }
     }
+
     override fun onResume() {
         yeuCauQuyenDayDu()
-        ChucNang().updateBotronColor(requireActivity(),keyboard,addContacts)
+        ChucNang().updateBotronColor(requireActivity(), keyboard, addContacts)
         val toolbar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
         toolbar.menu.clear()
         toolbar.inflateMenu(R.menu.menu)
@@ -159,23 +196,24 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         activity.setupToolbar()
         val sharedPref = activity.getSharedPreferences("CaiDat", Context.MODE_PRIVATE)
         val hienThiHinh = sharedPref.getBoolean("thu_nho_lien_he", true)
-        if(!hienThiHinh){
+        if (!hienThiHinh) {
             ChucNang().anHinhNgay(adapter)
         }
-        val hienThiSDT = sharedPref.getBoolean("hien_thi_sdt",false)
-        if(!hienThiHinh){
+        val hienThiSDT = sharedPref.getBoolean("hien_thi_sdt", false)
+        if (!hienThiHinh) {
             ChucNang().anHinhNgay(adapter)
         }
-        if (hienThiSDT){
+        if (hienThiSDT) {
             ChucNang().hienSDT(adapter)
         }
         val caidat = toolbar.menu.findItem(R.id.caiDat)
-        caidat.setOnMenuItemClickListener{
+        caidat.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.caiDat -> {
-                    ChucNang().diaLog_CaiDat(requireActivity(),adapter)
+                    ChucNang().diaLog_CaiDat(requireActivity(), adapter)
                     true
                 }
+
                 else -> false
             }
         }
@@ -454,16 +492,28 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                                 data = it
                             }
                             startActivity(intentEdit)
-                        } ?: Toast.makeText(requireContext(), "Không tìm thấy liên hệ", Toast.LENGTH_SHORT).show()
+                        } ?: Toast.makeText(
+                            requireContext(),
+                            "Không tìm thấy liên hệ",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         true
                     }
 
                     R.id.menu_Favorites_LongClickOne_ThemVaoNhom -> {
-                        if (ContextCompat.checkSelfPermission(requireActivity(), android.Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-                            ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.WRITE_CONTACTS), 101
+                        if (ContextCompat.checkSelfPermission(
+                                requireActivity(),
+                                android.Manifest.permission.WRITE_CONTACTS
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            ActivityCompat.requestPermissions(
+                                requireActivity(),
+                                arrayOf(android.Manifest.permission.WRITE_CONTACTS),
+                                101
                             )
                         } else {
-                            ChucNang().dialogThemVaoGroup(requireActivity(), selectedUsers[0], mutableListOf()
+                            ChucNang().dialogThemVaoGroup(
+                                requireActivity(), selectedUsers[0], mutableListOf()
                             )
                             adapter.deselectAll()
 

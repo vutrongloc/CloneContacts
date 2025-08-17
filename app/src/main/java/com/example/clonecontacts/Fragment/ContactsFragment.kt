@@ -62,97 +62,14 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         timKiem(dsUser)
         keyboard = view.findViewById<ImageView>(R.id.contacts_Keyboard)
         keyboard.setOnClickListener {
-            val bottomSheetDialog = BottomSheetDialog(requireActivity())
-            val view = LayoutInflater.from(requireActivity()).inflate(R.layout.dialog_bottomsheet,null)
-            bottomSheetDialog.setContentView(view)
-            val editTextQuaySo = view.findViewById<EditText>(R.id.editText_BottomSheet)
-            val button1 = view.findViewById<Button>(R.id.button1_Bottomsheet)
-            val button2 = view.findViewById<Button>(R.id.button2_Bottomsheet)
-            val button3 = view.findViewById<Button>(R.id.button3_Bottomsheet)
-            val button4 = view.findViewById<Button>(R.id.button4_Bottomsheet)
-            val button5 = view.findViewById<Button>(R.id.button5_Bottomsheet)
-            val button6 = view.findViewById<Button>(R.id.button6_Bottomsheet)
-            val button7 = view.findViewById<Button>(R.id.button7_Bottomsheet)
-            val button8 = view.findViewById<Button>(R.id.button8_Bottomsheet)
-            val button9 = view.findViewById<Button>(R.id.button9_Bottomsheet)
-            val button0 = view.findViewById<Button>(R.id.button0_Bottomsheet)
-            val call = view.findViewById<ImageView>(R.id.img_Bottomsheet_Call)
-            val backSpace = view.findViewById<ImageView>(R.id.img_Backspace_Bottomssheet)
-            button0.setOnClickListener{
-                editTextQuaySo.setText(editTextQuaySo.text.toString().plus("0"))
-            }
-            button1.setOnClickListener{
-                editTextQuaySo.setText(editTextQuaySo.text.toString().plus("1"))
-            }
-            button2.setOnClickListener{
-                editTextQuaySo.setText(editTextQuaySo.text.toString().plus("2"))
-            }
-            button3.setOnClickListener{
-                editTextQuaySo.setText(editTextQuaySo.text.toString().plus("3"))
-            }
-            button4.setOnClickListener{
-                editTextQuaySo.setText(editTextQuaySo.text.toString().plus("4"))
-            }
-            button5.setOnClickListener{
-                editTextQuaySo.setText(editTextQuaySo.text.toString().plus("5"))
-            }
-            button6.setOnClickListener{
-                editTextQuaySo.setText(editTextQuaySo.text.toString().plus("6"))
-            }
-            button7.setOnClickListener{
-                editTextQuaySo.setText(editTextQuaySo.text.toString().plus("7"))
-            }
-            button8.setOnClickListener{
-                editTextQuaySo.setText(editTextQuaySo.text.toString().plus("8"))
-            }
-            button9.setOnClickListener{
-                editTextQuaySo.setText(editTextQuaySo.text.toString().plus("9"))
-            }
-            backSpace.setOnClickListener {
-                val doDai = editTextQuaySo.text.toString().length
-                editTextQuaySo.setText(editTextQuaySo.text.toString().dropLast(1))
-            }
-            call.setOnClickListener {
-                if(editTextQuaySo.text.toString().length != 10){
-                    Toast.makeText(requireActivity(),"Yêu cầu phải nhập dúng 10 số",Toast.LENGTH_LONG).show()
-                }
-                else if (ContextCompat.checkSelfPermission(
-                        requireActivity(),
-                        android.Manifest.permission.CALL_PHONE
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    ActivityCompat.requestPermissions(
-                        requireActivity(), arrayOf(android.Manifest.permission.CALL_PHONE),
-                        1
-                    )
-
-                } else {
-                    makeCall(User("",editTextQuaySo.text.toString()))
-                }
-            }
-            bottomSheetDialog.show()
+            ChucNang().open_KeyBroad(requireActivity())
         }
         addContacts = view.findViewById<ImageView>(R.id.contacts_add)
         addContacts.setOnClickListener {
             themContacts()
         }
     }
-    fun makeCall(user: User) {
-        val telecomManager = requireActivity().getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-        val uri = Uri.parse("tel:${user.mobile}")
-        val extras = Bundle()
 
-        if (ContextCompat.checkSelfPermission(requireActivity(),android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.CALL_PHONE), 1)
-        } else {
-            telecomManager.placeCall(uri, extras)
-            // Chuyển sang OutgoingCallActivity
-            val intent = Intent(requireActivity(), OutgoingCallActivity::class.java)
-            intent.putExtra("callee_number", user.mobile)
-            intent.putExtra("callee_name", user.name)
-            startActivity(intent)
-        }
-    }
     fun yeuCauQuyenDayDu() {
         val canReadContacts = ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.READ_CONTACTS)
         val canWriteContacts = ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.WRITE_CONTACTS)

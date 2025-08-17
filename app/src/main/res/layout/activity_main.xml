@@ -6,7 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".activity.MainActivity" >
+    tools:context=".activity.MainActivity">
+
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/main_Toolbar"
         android:layout_width="match_parent"
@@ -14,19 +15,21 @@
         android:background="#FF9800"
         app:menu="@menu/menu"
         app:title="">
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/main_tenFragment"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
                 android:layout_marginBottom="10dp"
+                android:text="Contacts"
+                android:textColor="@color/white"
                 android:textSize="30sp"
-                android:visibility="visible"
-                android:text="Contacts">
-            </TextView>
+                android:visibility="visible"></TextView>
+
             <ImageView
                 android:id="@+id/main_Back"
                 android:layout_width="wrap_content"
@@ -34,42 +37,32 @@
                 android:layout_gravity="center"
                 android:layout_marginRight="20dp"
                 android:src="@drawable/arrow_back"
-                android:visibility="gone">
-            </ImageView>
+                android:visibility="gone"></ImageView>
+
             <EditText
                 android:id="@+id/main_EdittextTimKiem"
                 android:layout_width="220dp"
                 android:layout_height="wrap_content"
                 android:textColor="@color/white"
-                android:visibility="gone">
-            </EditText>
+                android:visibility="gone"></EditText>
         </LinearLayout>
     </androidx.appcompat.widget.Toolbar>
-    <androidx.core.widget.NestedScrollView
+
+    <FrameLayout
+        android:id="@+id/frameLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1">
-        <FrameLayout
-            android:id="@+id/frameLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
 
-        </FrameLayout>
-    </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
+
     <!-- Hiển thị số được quay -->
 
 
-
-
-
-
-
-
-       <com.google.android.material.bottomnavigation.BottomNavigationView
+    <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:menu="@menu/menu_bottom"
-        android:scrollIndicators="left"/>
+        android:scrollIndicators="left"
+        app:menu="@menu/menu_bottom" />
 </LinearLayout>

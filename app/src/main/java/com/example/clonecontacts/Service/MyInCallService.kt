@@ -2,6 +2,7 @@ package com.example.clonecontacts.Service
 
 import android.content.Intent
 import android.telecom.Call
+import android.telecom.CallAudioState
 import android.telecom.InCallService
 import android.util.Log
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -70,4 +71,6 @@ class MyInCallService : InCallService() {
         }
         startActivity(intent)
     }
+
+
 }

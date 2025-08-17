@@ -49,8 +49,7 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         add = view.findViewById<ImageView>(R.id.groups_add)
         yeuCauQuyenDayDu()
         keyboard.setOnClickListener {
-            val intent = Intent(Intent.ACTION_DIAL)
-            startActivity(intent)
+            ChucNang().open_KeyBroad(requireActivity())
         }
         add.setOnClickListener {
             diaLogAddGroup("Tạo một nhóm mới", Group())

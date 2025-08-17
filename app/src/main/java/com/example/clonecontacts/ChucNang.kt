@@ -21,9 +21,14 @@ import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.ContactsContract
+import android.telecom.TelecomManager
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -31,13 +36,16 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.example.clonecontacts.Adapter.DsAdapter
 import com.example.clonecontacts.Model.Group
 import com.example.clonecontacts.Model.User
+import com.example.clonecontacts.activity.OutgoingCallActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.slider.Slider
 import java.io.File
 import java.io.FileOutputStream
@@ -1075,5 +1083,104 @@ class ChucNang {
         adapter.hienThiSDT = true
         adapter.notifyDataSetChanged()  // Cập nhật lại toàn bộ giao diện
     }
+    fun open_KeyBroad(context: Context){
+        val bottomSheetDialog = BottomSheetDialog(context)
+        val view =
+            LayoutInflater.from(context).inflate(R.layout.dialog_bottomsheet, null)
+        bottomSheetDialog.setContentView(view)
+        val editTextQuaySo = view.findViewById<EditText>(R.id.editText_BottomSheet)
+        val button1 = view.findViewById<Button>(R.id.button1_Bottomsheet)
+        val button2 = view.findViewById<Button>(R.id.button2_Bottomsheet)
+        val button3 = view.findViewById<Button>(R.id.button3_Bottomsheet)
+        val button4 = view.findViewById<Button>(R.id.button4_Bottomsheet)
+        val button5 = view.findViewById<Button>(R.id.button5_Bottomsheet)
+        val button6 = view.findViewById<Button>(R.id.button6_Bottomsheet)
+        val button7 = view.findViewById<Button>(R.id.button7_Bottomsheet)
+        val button8 = view.findViewById<Button>(R.id.button8_Bottomsheet)
+        val button9 = view.findViewById<Button>(R.id.button9_Bottomsheet)
+        val button0 = view.findViewById<Button>(R.id.button0_Bottomsheet)
+        val call = view.findViewById<ImageView>(R.id.img_Bottomsheet_Call)
+        val backSpace = view.findViewById<ImageView>(R.id.img_Backspace_Bottomssheet)
+        button0.setOnClickListener {
+            editTextQuaySo.setText(editTextQuaySo.text.toString().plus("0"))
+        }
+        button1.setOnClickListener {
+            editTextQuaySo.setText(editTextQuaySo.text.toString().plus("1"))
+        }
+        button2.setOnClickListener {
+            editTextQuaySo.setText(editTextQuaySo.text.toString().plus("2"))
+        }
+        button3.setOnClickListener {
+            editTextQuaySo.setText(editTextQuaySo.text.toString().plus("3"))
+        }
+        button4.setOnClickListener {
+            editTextQuaySo.setText(editTextQuaySo.text.toString().plus("4"))
+        }
+        button5.setOnClickListener {
+            editTextQuaySo.setText(editTextQuaySo.text.toString().plus("5"))
+        }
+        button6.setOnClickListener {
+            editTextQuaySo.setText(editTextQuaySo.text.toString().plus("6"))
+        }
+        button7.setOnClickListener {
+            editTextQuaySo.setText(editTextQuaySo.text.toString().plus("7"))
+        }
+        button8.setOnClickListener {
+            editTextQuaySo.setText(editTextQuaySo.text.toString().plus("8"))
+        }
+        button9.setOnClickListener {
+            editTextQuaySo.setText(editTextQuaySo.text.toString().plus("9"))
+        }
+        backSpace.setOnClickListener {
+            val doDai = editTextQuaySo.text.toString().length
+            editTextQuaySo.setText(editTextQuaySo.text.toString().dropLast(1))
+        }
+        call.setOnClickListener {
+            if (editTextQuaySo.text.toString().length != 10) {
+                Toast.makeText(
+                    context,
+                    "Yêu cầu phải nhập dúng 10 số",
+                    Toast.LENGTH_LONG
+                ).show()
+            } else if (ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.CALL_PHONE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    context as Activity, arrayOf(android.Manifest.permission.CALL_PHONE),
+                    1
+                )
 
+            } else {
+                makeCall(User("", editTextQuaySo.text.toString()), context)
+            }
+        }
+        bottomSheetDialog.show()
+    }
+    fun makeCall(user: User, context: Context) {
+        val telecomManager =
+            context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+        val uri = Uri.parse("tel:${user.mobile}")
+        val extras = Bundle()
+
+        if (ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.CALL_PHONE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                context as Activity,
+                arrayOf(android.Manifest.permission.CALL_PHONE),
+                1
+            )
+        } else {
+            telecomManager.placeCall(uri, extras)
+            // Chuyển sang OutgoingCallActivity
+            val intent = Intent(context, OutgoingCallActivity::class.java)
+            intent.putExtra("callee_number", user.mobile)
+            intent.putExtra("callee_name", user.name)
+            context.startActivity(intent)
+        }
+    }
 }
