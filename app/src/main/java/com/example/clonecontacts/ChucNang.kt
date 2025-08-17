@@ -32,11 +32,11 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import com.example.clonecontacts.Adapter.DsAdapter
+import com.example.clonecontacts.Model.Group
+import com.example.clonecontacts.Model.User
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.slider.Slider
 import java.io.File

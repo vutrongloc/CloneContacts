@@ -14,9 +14,9 @@ import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.clonecontacts.Fragment.UserFragment
 import com.example.clonecontacts.Fragment.UserGroupsFragment
-import com.example.clonecontacts.Group
+import com.example.clonecontacts.Model.Group
 import com.example.clonecontacts.R
-import com.example.clonecontacts.User
+import com.example.clonecontacts.Model.User
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class DsAdapter(

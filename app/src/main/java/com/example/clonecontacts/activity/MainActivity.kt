@@ -1,4 +1,4 @@
-package com.example.clonecontacts
+package com.example.clonecontacts.activity
 
 import ContactImporter
 import android.Manifest
@@ -15,7 +15,6 @@ import android.os.Bundle
 import android.telecom.TelecomManager
 import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.RadioButton
@@ -29,9 +28,11 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.clonecontacts.ChucNang
 import com.example.clonecontacts.Fragment.ContactsFragment
 import com.example.clonecontacts.Fragment.FavoritesFragment
 import com.example.clonecontacts.Fragment.GroupsFragment
+import com.example.clonecontacts.R
 import com.example.clonecontacts.Service.OutgoingCallListener
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
@@ -47,12 +48,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     // UI Elements
-    private lateinit var tvNumber: TextView
+
     private lateinit var dialog: Dialog
     private lateinit var callListener: OutgoingCallListener
 
     // State Variables
-    private var dialedNumber: String = ""
+
     private var dialogInitialized = false
 
     // RoleManager for dialer role
@@ -105,12 +106,10 @@ class MainActivity : AppCompatActivity() {
 
     // Initialize UI components
     private fun initializeUI() {
-        tvNumber = findViewById(R.id.tvNumber)
+
         setupToolbar()
         setupExitButton()
         setupBottomNavigation()
-        setupDialPad()
-        setupCallButton()
     }
 
     // Initialize call listener
@@ -157,29 +156,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Setup dial pad buttons
-    private fun setupDialPad() {
-        val dialPadIds = listOf(
-            R.id.btn1, R.id.btn2, R.id.btn3,
-            R.id.btn4, R.id.btn5, R.id.btn6,
-            R.id.btn7, R.id.btn8, R.id.btn9,
-            R.id.btnStar, R.id.btn0, R.id.btnHash
-        )
-        dialPadIds.forEach { id ->
-            findViewById<Button>(id).setOnClickListener {
-                val digit = (it as Button).text.toString()
-                tvNumber.text = tvNumber.text.toString() + digit
-            }
-        }
-    }
+
 
     // Setup call button
-    private fun setupCallButton() {
-        findViewById<Button>(R.id.btnCall).setOnClickListener {
-            val number = tvNumber.text.toString()
-            if (number.isNotEmpty()) placeCall(number) else Toast.makeText(this, "Please enter a number", Toast.LENGTH_SHORT).show()
-        }
-    }
+
 
     // Request all necessary permissions
     private fun requestPermissions() {

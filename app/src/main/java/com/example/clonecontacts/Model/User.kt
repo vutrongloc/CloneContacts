@@ -1,4 +1,4 @@
-package com.example.clonecontacts
+package com.example.clonecontacts.Model
 
 import java.io.Serializable
 

@@ -27,10 +27,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.clonecontacts.Adapter.DsAdapter
 import com.example.clonecontacts.ChucNang
-import com.example.clonecontacts.Group
-import com.example.clonecontacts.MainActivity.Companion.PICK_VCF_REQUEST
+import com.example.clonecontacts.Model.Group
+import com.example.clonecontacts.activity.MainActivity.Companion.PICK_VCF_REQUEST
 import com.example.clonecontacts.R
-import com.example.clonecontacts.User
+import com.example.clonecontacts.Model.User
 
 class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     lateinit var adapter: DsAdapter

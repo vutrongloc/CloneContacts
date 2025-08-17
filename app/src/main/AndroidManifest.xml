@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -18,8 +19,9 @@
     <uses-permission android:name="android.permission.WRITE_CALL_LOG" />
     <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="true" />
@@ -29,20 +31,39 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.CloneContacts">
-        <activity android:name=".activity.OutgoingCallActivity"
+        <service
+            android:name=".Service.MyConnection"
+            android:enabled="true"
+            android:exported="true"></service>
+        <service
+            android:name=".Service.MyConnectionService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <activity
+            android:name=".Service.MyConnectionService"
+            android:exported="false" />
+        <activity
+            android:name=".activity.OutgoingCallActivity"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.DIAL" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:scheme="tel" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.CALL" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:scheme="tel" />
             </intent-filter>
         </activity>
-        <service android:name=".Service.CallService"
+
+        <service
+            android:name=".Service.CallService"
             android:exported="true"
             android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE"
             tools:ignore="MissingClass">
@@ -50,15 +71,16 @@
                 <action android:name="android.telecom.ConnectionService" />
             </intent-filter>
         </service>
+
         <activity
             android:name=".activity.IncomingCallActivity"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop"
             android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
             android:theme="@style/Base.Theme.CloneContacts" /> <!-- MainActivity -->
         <!-- MainActivity -->
         <activity
-            android:name=".MainActivity"
+            android:name=".activity.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

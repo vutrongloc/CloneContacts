@@ -1,7 +1,6 @@
 package com.example.clonecontacts.Fragment
 
 import android.Manifest
-import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -11,7 +10,6 @@ import android.os.Bundle
 import android.provider.ContactsContract
 import android.telecom.TelecomManager
 import android.text.Editable
-import android.text.InputType
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
@@ -31,10 +29,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.clonecontacts.Adapter.DsAdapter
 import com.example.clonecontacts.ChucNang
-import com.example.clonecontacts.Group
-import com.example.clonecontacts.MainActivity
+import com.example.clonecontacts.Model.Group
+import com.example.clonecontacts.activity.MainActivity
 import com.example.clonecontacts.R
-import com.example.clonecontacts.User
+import com.example.clonecontacts.Model.User
 import com.example.clonecontacts.activity.OutgoingCallActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.util.Collections.swap

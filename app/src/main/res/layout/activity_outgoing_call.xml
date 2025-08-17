@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
+
     android:gravity="center">
 
     <TextView
@@ -11,6 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="24sp"
+        android:layout_marginBottom="10dp"
         android:text="Unknown" />
 
     <TextView
@@ -18,6 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="18sp"
+        android:layout_marginBottom="10dp"
         android:text="Number" />
 
     <TextView
@@ -32,24 +35,29 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
+        android:layout_marginBottom="10dp"
         android:layout_marginTop="32dp">
 
         <Button
             android:id="@+id/speaker_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Mở loa" />
+            android:drawableLeft="@drawable/volume_up"
+            android:text="Mở loa"
+            android:layout_marginRight="15dp"/>
 
         <Button
             android:id="@+id/mute_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tắt âm" />
-
-        <Button
-            android:id="@+id/end_call_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Kết thúc" />
+            android:text="Tắt âm"
+            android:drawableLeft="@drawable/volume_off"
+            android:layout_marginRight="15dp"/>
     </LinearLayout>
+    <Button
+        android:id="@+id/end_call_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/phone_disabled"
+        android:text="Kết thúc" />
 </LinearLayout>

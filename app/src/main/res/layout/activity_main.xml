@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity" >
+    tools:context=".activity.MainActivity" >
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/main_Toolbar"
         android:layout_width="match_parent"
@@ -58,50 +58,14 @@
         </FrameLayout>
     </androidx.core.widget.NestedScrollView>
     <!-- Hiển thị số được quay -->
-    <TextView
-        android:id="@+id/tvNumber"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="24sp" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <Button android:id="@+id/btn1" android:text="1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
-        <Button android:id="@+id/btn2" android:text="2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
-        <Button android:id="@+id/btn3" android:text="3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <Button android:id="@+id/btn4" android:text="4" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
-        <Button android:id="@+id/btn5" android:text="5" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
-        <Button android:id="@+id/btn6" android:text="6" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <Button android:id="@+id/btn7" android:text="7" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
-        <Button android:id="@+id/btn8" android:text="8" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
-        <Button android:id="@+id/btn9" android:text="9" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <Button android:id="@+id/btnStar" android:text="*" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
-        <Button android:id="@+id/btn0" android:text="0" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
-        <Button android:id="@+id/btnHash" android:text="#" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
-    </LinearLayout>
 
-    <Button
-        android:id="@+id/btnCall"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Call" />
+
+
+
+
+
+
        <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom"
         android:layout_width="wrap_content"
