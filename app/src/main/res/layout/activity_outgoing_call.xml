@@ -3,16 +3,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-
+    android:padding="24dp"
+    android:background="@android:color/white"
     android:gravity="center">
 
     <TextView
         android:id="@+id/callee_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="24sp"
-        android:layout_marginBottom="10dp"
+        android:textSize="26sp"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="12dp"
+        android:fontFamily="sans-serif-medium"
         android:text="Unknown" />
 
     <TextView
@@ -20,14 +22,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="18sp"
-        android:layout_marginBottom="10dp"
+        android:textColor="#757575"
+        android:layout_marginBottom="12dp"
+        android:fontFamily="sans-serif"
         android:text="Number" />
 
     <TextView
         android:id="@+id/call_duration"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
+        android:textSize="16sp"
+        android:textColor="#757575"
+        android:layout_marginBottom="24dp"
+        android:fontFamily="sans-serif"
         android:text="Dialing..." />
 
     <LinearLayout
@@ -35,29 +42,50 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginBottom="10dp"
-        android:layout_marginTop="32dp">
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="24dp">
 
         <Button
             android:id="@+id/speaker_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:drawableLeft="@drawable/volume_up"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
             android:text="Mở loa"
-            android:layout_marginRight="15dp"/>
+            android:textSize="16sp"
+            android:textColor="@android:color/white"
+            android:drawableLeft="@drawable/volume_up"
+            android:drawablePadding="8dp"
+            android:background="@drawable/rounded_button"
+            android:layout_marginEnd="12dp"
+            android:elevation="4dp" />
 
         <Button
             android:id="@+id/mute_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
             android:text="Tắt âm"
+            android:textSize="16sp"
+            android:textColor="@android:color/white"
             android:drawableLeft="@drawable/volume_off"
-            android:layout_marginRight="15dp"/>
+            android:drawablePadding="8dp"
+            android:background="@drawable/rounded_button"
+            android:layout_marginStart="12dp"
+            android:elevation="4dp" />
     </LinearLayout>
+
     <Button
         android:id="@+id/end_call_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/rounded_button"
+        android:backgroundTint="@null"
+        android:backgroundTintMode="@null"
         android:drawableLeft="@drawable/phone_disabled"
-        android:text="Kết thúc" />
+        android:drawablePadding="8dp"
+        android:elevation="4dp"
+        android:text="Kết thúc."
+        android:textColor="@android:color/white"
+        android:textSize="18sp" />
 </LinearLayout>
