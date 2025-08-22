@@ -64,5 +64,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:scrollIndicators="left"
+        android:background="@color/black"
         app:menu="@menu/menu_bottom" />
 </LinearLayout>

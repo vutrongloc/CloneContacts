@@ -1,5 +1,6 @@
 package com.example.clonecontacts.Service
 
+import android.content.Context
 import android.content.Intent
 import android.telecom.Call
 import android.telecom.CallAudioState
@@ -14,17 +15,34 @@ class MyInCallService : InCallService() {
         const val ACTION_CALL_STATE_CHANGED = "com.example.clonecontacts.CALL_STATE_CHANGED"
         const val EXTRA_PHONE_NUMBER = "PHONE_NUMBER"
         const val EXTRA_CALL_STATE = "CALL_STATE"
+
+        var instance: MyInCallService? = null
+            private set
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        instance = null
     }
 
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
         Log.d(TAG, "Call added: ${call.details.handle.schemeSpecificPart}, state: ${call.state}")
+
         CallManager.updateCall(call)
         call.registerCallback(callCallback)
         sendCallStateBroadcast(call, call.state)
+
         if (call.state == Call.STATE_RINGING) {
             showCallUI(call)
         }
+
+        CallManager.currentCall = call
     }
 
     override fun onCallRemoved(call: Call) {
@@ -44,16 +62,13 @@ class MyInCallService : InCallService() {
             when (state) {
                 Call.STATE_RINGING -> showCallUI(call)
                 Call.STATE_DISCONNECTED, Call.STATE_DISCONNECTING -> {
-                    Log.d(TAG, "Call ended by remote party or system.")
+                    Log.d(TAG, "Call ended.")
                     CallManager.updateCall(null)
                     sendCallStateBroadcast(call, Call.STATE_DISCONNECTED)
                 }
             }
         }
     }
-
-
-
 
     private fun sendCallStateBroadcast(call: Call, state: Int) {
         val intent = Intent(ACTION_CALL_STATE_CHANGED).apply {
@@ -72,5 +87,25 @@ class MyInCallService : InCallService() {
         startActivity(intent)
     }
 
+    /** Bật/tắt loa ngoài */
+    fun toggleSpeakerphone(): Boolean {
+        var a = true
+        val newRoute =
+            if (callAudioState.route == CallAudioState.ROUTE_SPEAKER) {
+                CallAudioState.ROUTE_EARPIECE
+            } else {
+                CallAudioState.ROUTE_SPEAKER
+            }
+        if (callAudioState.route == CallAudioState.ROUTE_SPEAKER) { a = false }
+        setAudioRoute(newRoute)
+        Log.d(TAG, "Speakerphone toggled: $newRoute")
+        return a
+    }
 
+    /** Bật/tắt micro */
+    fun toggleMute(): Boolean {
+        val newMuted = !callAudioState.isMuted
+        setMuted(newMuted)
+        return newMuted
+    }
 }

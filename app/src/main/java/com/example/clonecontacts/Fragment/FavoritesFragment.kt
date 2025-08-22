@@ -5,6 +5,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -63,6 +65,10 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         yeuCauQuyenDayDu()
         timKiem()
         keyboard = view.findViewById<ImageView>(R.id.favorites_Keyboard)
+        val toolBar = activity?.findViewById<Toolbar>(R.id.main_Toolbar)
+
+        // Lấy màu hiện tại của Toolbar
+        val toolbarColor = (toolBar?.background as ColorDrawable).color
         keyboard.setOnClickListener {
             ChucNang().open_KeyBroad(requireActivity())
         }
@@ -259,6 +265,13 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
 
 
         val dialog = builder.create()
+        val toolBar = activity?.findViewById<Toolbar>(R.id.main_Toolbar)
+
+        // Lấy màu hiện tại của Toolbar
+        val toolbarColor = (toolBar?.background as ColorDrawable).color
+        val drawable2 = ContextCompat.getDrawable(requireActivity(), R.drawable.bovuong)?.mutate() as GradientDrawable
+        drawable2.setColor(toolbarColor)
+        dialog.window?.setBackgroundDrawable(drawable2)
         dialog.show()
     }
 
@@ -532,7 +545,13 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
 
                     R.id.menu_Favorites_LongClickOne_GuiEmail -> {
-                        ChucNang().moUngDungEmail(requireActivity())
+                        val email = ChucNang().getEmailFromPhone(requireActivity(), selectedUsers[0].mobile)
+                        if (email != null) {
+                            ChucNang().moUngDungEmail(requireActivity(), listOf(email)) // hàm bạn đã viết để mở email
+                        } else {
+                            adapter.deselectAll()
+                            Toast.makeText(requireActivity(), "Không tìm thấy email cho số này", Toast.LENGTH_SHORT).show()
+                        }
                         true
                     }
 

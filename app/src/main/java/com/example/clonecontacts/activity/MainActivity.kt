@@ -9,6 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -32,6 +34,8 @@ import com.example.clonecontacts.ChucNang
 import com.example.clonecontacts.Fragment.ContactsFragment
 import com.example.clonecontacts.Fragment.FavoritesFragment
 import com.example.clonecontacts.Fragment.GroupsFragment
+import com.example.clonecontacts.Fragment.UserFragment
+import com.example.clonecontacts.Model.User
 import com.example.clonecontacts.R
 import com.example.clonecontacts.Service.OutgoingCallListener
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -66,33 +70,68 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Activity Result Launcher for Default Dialer
-    private val setDefaultDialerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            // Check if your app is now the default dialer
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && roleManager?.isRoleHeld(RoleManager.ROLE_DIALER) == true) {
-                Toast.makeText(this, "This app is now set as default dialer", Toast.LENGTH_SHORT).show()
-                Log.d(TAG, "Default dialer set successfully")
-                // Navigate to dashboard or perform other actions here if needed
+    private val setDefaultDialerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                // Check if your app is now the default dialer
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && roleManager?.isRoleHeld(
+                        RoleManager.ROLE_DIALER
+                    ) == true
+                ) {
+                    Toast.makeText(
+                        this,
+                        "This app is now set as default dialer",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Log.d(TAG, "Default dialer set successfully")
+                    // Navigate to dashboard or perform other actions here if needed
+                } else {
+                    Toast.makeText(
+                        this,
+                        "Please set this app as default calling app to proceed",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Log.d(TAG, "App is not set as default dialer")
+                }
             } else {
-                Toast.makeText(this, "Please set this app as default calling app to proceed", Toast.LENGTH_SHORT).show()
-                Log.d(TAG, "App is not set as default dialer")
+                Log.d(
+                    TAG,
+                    "Something went wrong while setting as default, most likely user cancelled the popup"
+                )
+                Toast.makeText(
+                    this,
+                    "Please set this app as default calling app to proceed",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-        } else {
-            Log.d(TAG, "Something went wrong while setting as default, most likely user cancelled the popup")
-            Toast.makeText(this, "Please set this app as default calling app to proceed", Toast.LENGTH_SHORT).show()
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
         setupFullScreenMode()
+        applySavedTheme()
         initializeUI()
         initializeCallListener()
         requestPermissions()
-        applySavedTheme()
-        Log.d(TAG, "onCreate: Activity created")
+
+        val userName = intent.getStringExtra("user_Shortcut_Name")
+        val userMobile = intent.getStringExtra("user_Shortcut_Mobile")
+        if (userMobile != null && userName != null) {
+            val fragment = UserFragment()
+            val bundle = Bundle()
+            bundle.putSerializable("user", User(userName, userMobile))
+            fragment.arguments = bundle
+            val toolbar = findViewById<Toolbar>(R.id.main_Toolbar)
+            toolbar.visibility = View.GONE
+            val bottom = findViewById<BottomNavigationView>(R.id.bottom)
+            bottom.visibility = View.GONE
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.frameLayout, fragment)
+                .commit()
+
+        }
     }
 
     // Full screen setup
@@ -121,8 +160,18 @@ class MainActivity : AppCompatActivity() {
     // Setup toolbar with menu listeners
     fun setupToolbar() {
         val toolbar = findViewById<Toolbar>(R.id.main_Toolbar)
+
+        val toolbarColor = (toolbar.background as ColorDrawable).color
+        val drawable = ContextCompat.getDrawable(this, R.drawable.bovuong)?.mutate() as GradientDrawable
+        drawable.setColor(toolbarColor)
+
         if (!dialogInitialized) {
-            dialog = Dialog(this).apply { setContentView(R.layout.dialog_sap_xep) }
+            dialog = Dialog(this).apply {
+                setContentView(R.layout.dialog_sap_xep)
+                window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            }
+            val root = dialog.findViewById<View>(R.id.dialog_sap_xep)
+            root.background = drawable
             dialogInitialized = true
         }
         toolbar.setOnMenuItemClickListener { item ->
@@ -150,12 +199,12 @@ class MainActivity : AppCompatActivity() {
                     requestFullContactPermissions()
                     true
                 }
+
                 R.id.Favorites -> replaceFragment(FavoritesFragment())
                 else -> replaceFragment(GroupsFragment())
             }
         }
     }
-
 
 
     // Setup call button
@@ -210,7 +259,11 @@ class MainActivity : AppCompatActivity() {
     // Place a call
     private fun placeCall(number: String) {
         val telecomManager = getSystemService(TELECOM_SERVICE) as TelecomManager
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CALL_PHONE
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             telecomManager.placeCall(Uri.parse("tel:$number"), Bundle())
             Log.d(TAG, "Placing call to: $number")
         } else {
@@ -278,8 +331,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun importContactsFromFile(): Boolean {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_CONTACTS), 101)
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_CONTACTS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.WRITE_CONTACTS),
+                101
+            )
         } else {
             requestContactPermission()
         }
@@ -287,11 +348,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun exportContactsToFile(): Boolean {
-        val readContactsGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
-        val writeContactsGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS) == PackageManager.PERMISSION_GRANTED
+        val readContactsGranted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_CONTACTS
+        ) == PackageManager.PERMISSION_GRANTED
+        val writeContactsGranted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.WRITE_CONTACTS
+        ) == PackageManager.PERMISSION_GRANTED
         when {
-            !writeContactsGranted -> ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_CONTACTS), 102)
-            !readContactsGranted -> ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), 102)
+            !writeContactsGranted -> ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.WRITE_CONTACTS),
+                102
+            )
+
+            !readContactsGranted -> ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_CONTACTS),
+                102
+            )
+
             else -> exportContacts()
         }
         return true
@@ -305,11 +382,19 @@ class MainActivity : AppCompatActivity() {
             else -> "Groups"
         }
         val success = ContactImporter(this, type).exportContactsToVcf()
-        Toast.makeText(this, if (success) "Đã xuất tệp vào mục downloads" else "Không xuất tệp thành công", Toast.LENGTH_LONG).show()
+        Toast.makeText(
+            this,
+            if (success) "Đã xuất tệp vào mục downloads" else "Không xuất tệp thành công",
+            Toast.LENGTH_LONG
+        ).show()
     }
 
     // Fragment utilities
-    private fun truyenThongTinSapXepToiFragment(upOrDown: RadioButton, firstOrLast: RadioButton, fragment: Fragment) {
+    private fun truyenThongTinSapXepToiFragment(
+        upOrDown: RadioButton,
+        firstOrLast: RadioButton,
+        fragment: Fragment
+    ) {
         val isAscending = upOrDown.text.toString() == "Tăng Dần"
         val isFirstName = firstOrLast.text.toString() == "First name"
         val newFragment = when (fragment) {
@@ -333,14 +418,37 @@ class MainActivity : AppCompatActivity() {
 
     // Contact permissions
     private fun requestContactPermission() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
-        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_CONTACTS), 102)
-        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                1
+            )
+        } else if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_CONTACTS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.WRITE_CONTACTS),
+                102
+            )
+        } else if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_CONTACTS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), 102)
         } else {
-            startActivityForResult(Intent(Intent.ACTION_GET_CONTENT).setType("*/*"), PICK_VCF_REQUEST)
+            startActivityForResult(
+                Intent(Intent.ACTION_GET_CONTENT).setType("*/*"),
+                PICK_VCF_REQUEST
+            )
         }
     }
 
@@ -350,7 +458,12 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.WRITE_CONTACTS,
             Manifest.permission.CALL_PHONE
         )
-        if (permissions.all { ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED }) {
+        if (permissions.all {
+                ContextCompat.checkSelfPermission(
+                    this,
+                    it
+                ) == PackageManager.PERMISSION_GRANTED
+            }) {
             replaceFragment(ContactsFragment())
         } else {
             ActivityCompat.requestPermissions(this, permissions, REQUEST_CODE_CONTACTS_FULL)
@@ -366,7 +479,11 @@ class MainActivity : AppCompatActivity() {
             else -> "Groups"
         }
         val success = ContactImporter(this, type).importContactsFromVcf(uri)
-        Toast.makeText(this, if (success) "Đã nhập danh bạ thành công" else "Lỗi khi nhập danh bạ", Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            this,
+            if (success) "Đã nhập danh bạ thành công" else "Lỗi khi nhập danh bạ",
+            Toast.LENGTH_SHORT
+        ).show()
         if (success) {
             val newFragment = when (currentFragment) {
                 is ContactsFragment -> ContactsFragment()
@@ -387,14 +504,27 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         Log.d(TAG, "onActivityResult: requestCode = $requestCode, resultCode = $resultCode")
         when (requestCode) {
-            PICK_VCF_REQUEST -> if (resultCode == Activity.RESULT_OK) data?.data?.let { importVcfFile(it) }
+            PICK_VCF_REQUEST -> if (resultCode == Activity.RESULT_OK) data?.data?.let {
+                importVcfFile(
+                    it
+                )
+            }
+
             REQUEST_CODE_SET_DEFAULT_DIALER -> {
-                Toast.makeText(this, if (resultCode == RESULT_OK) "Default dialer set successfully" else "Failed to set default dialer", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    if (resultCode == RESULT_OK) "Default dialer set successfully" else "Failed to set default dialer",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             REQUEST_CODE_PERMISSIONS -> {
@@ -402,19 +532,35 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, "All permissions granted")
                     requestDefaultDialer()
                 } else {
-                    Toast.makeText(this, "Please grant all permissions to set as default dialer", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this,
+                        "Please grant all permissions to set as default dialer",
+                        Toast.LENGTH_LONG
+                    ).show()
                     Log.d(TAG, "Some permissions denied: ${permissions.joinToString()}")
                 }
             }
+
             REQUEST_CODE_CONTACTS_FULL -> {
-                if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) replaceFragment(ContactsFragment())
-                else Toast.makeText(this, "Cần cấp quyền đầy đủ để truy cập danh bạ và thực hiện cuộc gọi", Toast.LENGTH_SHORT).show()
+                if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) replaceFragment(
+                    ContactsFragment()
+                )
+                else Toast.makeText(
+                    this,
+                    "Cần cấp quyền đầy đủ để truy cập danh bạ và thực hiện cuộc gọi",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
+
             1 -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // Retry call if needed
                 } else {
-                    Toast.makeText(this, "Cần quyền CALL_PHONE để thực hiện cuộc gọi", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Cần quyền CALL_PHONE để thực hiện cuộc gọi",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }

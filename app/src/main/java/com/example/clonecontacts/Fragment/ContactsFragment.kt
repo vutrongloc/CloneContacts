@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -15,7 +16,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
@@ -33,8 +33,6 @@ import com.example.clonecontacts.Model.Group
 import com.example.clonecontacts.activity.MainActivity
 import com.example.clonecontacts.R
 import com.example.clonecontacts.Model.User
-import com.example.clonecontacts.activity.OutgoingCallActivity
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.util.Collections.swap
 
 
@@ -340,7 +338,13 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
 
                     R.id.menu_LongClickOne_GuiEmail -> {
-                        ChucNang().moUngDungEmail(requireActivity())
+                        val email = ChucNang().getEmailFromPhone(requireActivity(), selectedUsers[0].mobile)
+                        if (email != null) {
+                            ChucNang().moUngDungEmail(requireActivity(), listOf(email)) // hàm bạn đã viết để mở email
+                        } else {
+                            adapter.deselectAll()
+                            Toast.makeText(requireActivity(), "Không tìm thấy email cho số này", Toast.LENGTH_SHORT).show()
+                        }
                         true
                     }
 
@@ -348,7 +352,7 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                         ChucNang().kiemTraQuyenGhiDanhBaDeXoaContacts(
                             selectedUsers[0].mobile,
                             requireActivity(),
-                            ContactsFragment(),
+                            User(),
                             false
                         )
                         requireActivity().supportFragmentManager.beginTransaction().apply {
@@ -480,13 +484,19 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
 
                     R.id.menu_LongClickMuch_GuiEmail -> {
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "message/rfc822"  // Chỉ mở ứng dụng email
-                            putExtra(Intent.EXTRA_SUBJECT, "Tiêu đề email")
-                            putExtra(Intent.EXTRA_TEXT, "Nội dung email")
+                        var ds_Email = listOf<String>()
+                        for (user in selectedUsers){
+                            val email = ChucNang().getEmailFromPhone(requireActivity(), user.mobile)
+                            if ( email != null){
+                                ds_Email += email
+                            }
                         }
-                        val chooser = Intent.createChooser(intent, "Chia sẻ qua Email:")
-                        startActivity(chooser)
+                        if ( ds_Email.isNotEmpty() ){
+                            ChucNang().moUngDungEmail(requireActivity(), ds_Email)
+                        } else {
+                            adapter.deselectAll()
+                            Toast.makeText(requireActivity(), "Các số vừa chọn không thấy email", Toast.LENGTH_SHORT).show()
+                        }
                         true
                     }
                     else -> false

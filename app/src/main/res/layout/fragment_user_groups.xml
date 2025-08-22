@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:layout_gravity="bottom|right"
     android:orientation="vertical"
+    android:background="@color/black"
     tools:context=".Fragment.GroupsFragment">
 
     <TextView

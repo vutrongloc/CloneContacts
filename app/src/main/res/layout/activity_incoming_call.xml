@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="#FFFFFF">
+    android:background="@color/black">
 
     <TextView
         android:id="@+id/caller_number"
@@ -34,7 +34,8 @@
             android:id="@+id/btn_accept"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Accept"
+            android:drawableLeft="@drawable/call_24dp_e8eaed_fill0_wght400_grad0_opsz24"
+            android:text="Nghe máy"
             android:backgroundTint="#00FF00"
             android:visibility="gone" />
 
@@ -42,7 +43,8 @@
             android:id="@+id/btn_reject"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Reject"
+            android:drawableLeft="@drawable/phone_disabled"
+            android:text="Tắt máy"
             android:backgroundTint="#FF0000"
             android:layout_marginStart="16dp"
             android:visibility="gone" />
@@ -51,7 +53,8 @@
             android:id="@+id/btn_hangup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hang Up"
+            android:drawableLeft="@drawable/call_end"
+            android:text="Kết thúc"
             android:backgroundTint="#FF0000"
             android:visibility="gone" />
     </LinearLayout>

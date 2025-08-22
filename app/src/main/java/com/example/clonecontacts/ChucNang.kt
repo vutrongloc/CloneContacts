@@ -36,6 +36,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
@@ -43,6 +44,7 @@ import androidx.fragment.app.FragmentActivity
 import com.example.clonecontacts.Adapter.DsAdapter
 import com.example.clonecontacts.Model.Group
 import com.example.clonecontacts.Model.User
+import com.example.clonecontacts.activity.MainActivity
 import com.example.clonecontacts.activity.OutgoingCallActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -241,14 +243,60 @@ class ChucNang {
             Toast.makeText(activity, "Lỗi khi chia sẻ: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
+    fun getEmailFromPhone(context: Context, phoneNumber: String): String? {
+        val contentResolver = context.contentResolver
 
-    fun moUngDungEmail(activity: FragmentActivity) {
+        // Truy vấn contact ID từ số điện thoại
+        val phoneUri = Uri.withAppendedPath(
+            ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+            Uri.encode(phoneNumber)
+        )
+        val phoneCursor = contentResolver.query(
+            phoneUri,
+            arrayOf(ContactsContract.PhoneLookup._ID),
+            null, null, null
+        )
+
+        var contactId: String? = null
+        if (phoneCursor != null && phoneCursor.moveToFirst()) {
+            contactId = phoneCursor.getString(
+                phoneCursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup._ID)
+            )
+            phoneCursor.close()
+        }
+
+        if (contactId != null) {
+            // Truy vấn email theo contact ID
+            val emailCursor = contentResolver.query(
+                ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                arrayOf(ContactsContract.CommonDataKinds.Email.DATA),
+                "${ContactsContract.CommonDataKinds.Email.CONTACT_ID}=?",
+                arrayOf(contactId),
+                null
+            )
+            if (emailCursor != null && emailCursor.moveToFirst()) {
+                val email = emailCursor.getString(
+                    emailCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Email.DATA)
+                )
+                emailCursor.close()
+                return email
+            }
+        }
+
+        return null // Không tìm thấy email
+    }
+
+    fun moUngDungEmail(activity: FragmentActivity, emails: List<String>, subject: String? = null, body: String? = null) {
         val intent = Intent(Intent.ACTION_SENDTO).apply {
-            data =
-                Uri.parse("mailto:")  // Chỉ cần đặt data là "mailto:" để mở trình soạn thảo email trống
+            data = Uri.parse("mailto:") // bắt buộc để hệ thống hiểu là email
+            putExtra(Intent.EXTRA_EMAIL, emails.toTypedArray()) // gửi nhiều người
+            subject?.let { putExtra(Intent.EXTRA_SUBJECT, it) }
+            body?.let { putExtra(Intent.EXTRA_TEXT, it) }
         }
         activity.startActivity(intent)
     }
+
+
 
     fun sendSMS(phoneNumber: String, message: String, activity: FragmentActivity) {
         if (ContextCompat.checkSelfPermission(
@@ -275,7 +323,7 @@ class ChucNang {
     fun kiemTraQuyenGhiDanhBaDeXoaContacts(
         phoneNumber: String,
         activity: FragmentActivity,
-        fragment: Fragment,
+        user: User,
         dieuKien: Boolean
     ) {
         val permission = android.Manifest.permission.WRITE_CONTACTS
@@ -289,7 +337,7 @@ class ChucNang {
             // Quyền đã được cấp, thực hiện xóa danh bạ
             deleteContact(activity, phoneNumber)
             if (dieuKien) {
-                quayLaiFragment(activity, fragment)
+                quayLaiFragment(activity, user)
             }
         }
     }
@@ -317,18 +365,22 @@ class ChucNang {
         }
     }
 
-    fun quayLaiFragment(activity: FragmentActivity, fragment: Fragment) {
+    fun quayLaiFragment(activity: FragmentActivity, user: User) {
         val isPopped = activity.supportFragmentManager.popBackStackImmediate()
         if (isPopped != true) {
-            activity.supportFragmentManager.beginTransaction().apply {
-                replace(R.id.frameLayout, fragment)
-                commit()
+            if(!user.mobile.isNullOrEmpty()){
+                val shortcutManager =activity.getSystemService(ShortcutManager::class.java)
+
+                shortcutManager.removeDynamicShortcuts(listOf(user.mobile))
+                shortcutManager.disableShortcuts(listOf(user.mobile))
             }
+            activity.finish()
+        }else{
+            val toolbar = activity.findViewById<Toolbar>(R.id.main_Toolbar)
+            toolbar.visibility = View.VISIBLE
+            val bottom = activity.findViewById<BottomNavigationView>(R.id.bottom)
+            bottom.visibility = View.VISIBLE
         }
-        val toolbar = activity.findViewById<Toolbar>(R.id.main_Toolbar)
-        toolbar.visibility = View.VISIBLE
-        val bottom = activity.findViewById<BottomNavigationView>(R.id.bottom)
-        bottom.visibility = View.VISIBLE
     }
 
     fun thayDoiAnhDaiDien(linearLayout: LinearLayout, text: String) {
@@ -581,7 +633,9 @@ class ChucNang {
                 ) // Kiểm tra số lượng liên hệ trong nhóm
 
                 //val contactInfo = contacts.joinToString("\n") { "${it.name}: ${it.mobile}" }
-                dsGroups.add(Group(groupName, contacts))
+                if(!groupName.isNullOrEmpty()){
+                    dsGroups.add(Group(groupName, contacts))
+                }
             }
         }
         return dsGroups.distinctBy { it.nameGroup }.toMutableList()
@@ -666,15 +720,21 @@ class ChucNang {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun createShortcut(user: User, anh: Int, activity: FragmentActivity) {
+        val intent = Intent(activity, MainActivity::class.java).apply {
+            action = Intent.ACTION_VIEW
+            putExtra("user_Shortcut_Name", user.name)   // truyền dữ liệu cho fragment
+            putExtra("user_Shortcut_Mobile", user.mobile)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+
         val shortcutManager = activity.getSystemService(ShortcutManager::class.java)
         // Tạo ShortcutInfo (Shortcut động)
-        val shortcut = ShortcutInfo.Builder(activity, user.name)
+        val shortcut = ShortcutInfo.Builder(activity, user.mobile)
             .setShortLabel(user.name)
             .setIcon(Icon.createWithResource(activity, anh))
-            .setIntent(
-                Intent(Intent.ACTION_DIAL, Uri.parse("tel:${user.mobile}"))
-            )
+            .setIntent(intent)  // mở MainActivity
             .build()
+
 
         // Kiểm tra nếu có thể ghim phím tắt
         if (shortcutManager!!.isRequestPinShortcutSupported) {
@@ -684,8 +744,6 @@ class ChucNang {
             )
 
             shortcutManager.requestPinShortcut(shortcut, successCallback.intentSender)
-            Toast.makeText(activity, "Đã tạo phím tắt ra màn hình chính!", Toast.LENGTH_SHORT)
-                .show()
         } else {
             Toast.makeText(activity, "Thiết bị không hỗ trợ tạo phím tắt!", Toast.LENGTH_SHORT)
                 .show()
@@ -918,23 +976,30 @@ class ChucNang {
     }
     fun deleteGroupPermanently(context: Context, groupId: Long): Boolean {
         val resolver = context.contentResolver
-
-        // URI tới bảng ContactsContract.Groups
-        val uri = ContactsContract.Groups.CONTENT_URI
-
-        // Điều kiện để xác định nhóm cần xóa
-        val where = "${ContactsContract.Groups._ID} = ?"
-        val selectionArgs = arrayOf(groupId.toString())
-
-        // Thực hiện xóa nhóm
         return try {
-            val rowsDeleted = resolver.delete(uri, where, selectionArgs)
-            rowsDeleted > 0 // Trả về true nếu xóa thành công
+            // 1. Xóa tất cả thành viên trong nhóm
+            val whereMembers = "${ContactsContract.Data.MIMETYPE}=? AND ${ContactsContract.CommonDataKinds.GroupMembership.GROUP_ROW_ID}=?"
+            val argsMembers = arrayOf(
+                ContactsContract.CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE,
+                groupId.toString()
+            )
+            resolver.delete(ContactsContract.Data.CONTENT_URI, whereMembers, argsMembers)
+
+            // 2. Xóa luôn group (thay vì chỉ set deleted=1)
+            val whereGroup = "${ContactsContract.Groups._ID}=?"
+            val argsGroup = arrayOf(groupId.toString())
+            resolver.delete(ContactsContract.Groups.CONTENT_URI, whereGroup, argsGroup)
+
+            resolver.notifyChange(ContactsContract.Groups.CONTENT_URI, null)
+            true
         } catch (e: Exception) {
             e.printStackTrace()
             false
         }
     }
+
+
+
     fun updateBottomNavigationColor(activity: Activity) {
         val bottomNavigationView = activity.findViewById<BottomNavigationView>(R.id.bottom)
         val toolBar = activity.findViewById<Toolbar>(R.id.main_Toolbar)
@@ -1071,8 +1136,14 @@ class ChucNang {
                 checkedItems[which] = true
             }
         }
-
         val dialog = builder.create()
+        val toolBar = activity?.findViewById<Toolbar>(R.id.main_Toolbar)
+
+        // Lấy màu hiện tại của Toolbar
+        val toolbarColor = (toolBar?.background as ColorDrawable).color
+        val drawable2 = ContextCompat.getDrawable(activity, R.drawable.bovuong)?.mutate() as GradientDrawable
+        drawable2.setColor(toolbarColor)
+        dialog.window?.setBackgroundDrawable(drawable2)
         dialog.show()
     }
     fun anHinhNgay(adapter: DsAdapter){
@@ -1083,10 +1154,14 @@ class ChucNang {
         adapter.hienThiSDT = true
         adapter.notifyDataSetChanged()  // Cập nhật lại toàn bộ giao diện
     }
-    fun open_KeyBroad(context: Context){
-        val bottomSheetDialog = BottomSheetDialog(context)
+    fun open_KeyBroad(activity: Activity){
+        val toolBar = activity.findViewById<Toolbar>(R.id.main_Toolbar)
+
+        // Lấy màu hiện tại của Toolbar
+        val toolbarColor = (toolBar.background as ColorDrawable).color
+        val bottomSheetDialog = BottomSheetDialog(activity)
         val view =
-            LayoutInflater.from(context).inflate(R.layout.dialog_bottomsheet, null)
+            LayoutInflater.from(activity).inflate(R.layout.dialog_bottomsheet, null)
         bottomSheetDialog.setContentView(view)
         val editTextQuaySo = view.findViewById<EditText>(R.id.editText_BottomSheet)
         val button1 = view.findViewById<Button>(R.id.button1_Bottomsheet)
@@ -1101,6 +1176,17 @@ class ChucNang {
         val button0 = view.findViewById<Button>(R.id.button0_Bottomsheet)
         val call = view.findViewById<ImageView>(R.id.img_Bottomsheet_Call)
         val backSpace = view.findViewById<ImageView>(R.id.img_Backspace_Bottomssheet)
+        val numberButtons = listOf(button0, button1, button2, button3, button4,
+            button5, button6, button7, button8, button9)
+
+        numberButtons.forEach { btn ->
+            btn.setBackgroundColor(toolbarColor)
+        }
+        val drawable2 = ContextCompat.getDrawable(activity, R.drawable.bovuong)?.mutate() as GradientDrawable
+        drawable2.setColor(toolbarColor)
+        call.background = drawable2
+        backSpace.background = drawable2
+
         button0.setOnClickListener {
             editTextQuaySo.setText(editTextQuaySo.text.toString().plus("0"))
         }
@@ -1138,22 +1224,22 @@ class ChucNang {
         call.setOnClickListener {
             if (editTextQuaySo.text.toString().length != 10) {
                 Toast.makeText(
-                    context,
+                    activity,
                     "Yêu cầu phải nhập dúng 10 số",
                     Toast.LENGTH_LONG
                 ).show()
             } else if (ContextCompat.checkSelfPermission(
-                    context,
+                    activity,
                     android.Manifest.permission.CALL_PHONE
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 ActivityCompat.requestPermissions(
-                    context as Activity, arrayOf(android.Manifest.permission.CALL_PHONE),
+                    activity, arrayOf(android.Manifest.permission.CALL_PHONE),
                     1
                 )
 
             } else {
-                makeCall(User("", editTextQuaySo.text.toString()), context)
+                makeCall(User("", editTextQuaySo.text.toString()), activity)
             }
         }
         bottomSheetDialog.show()

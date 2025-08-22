@@ -3,6 +3,8 @@ package com.example.clonecontacts.Fragment
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -15,6 +17,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.clonecontacts.Adapter.DsAdapter
@@ -45,27 +48,35 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
              nhomNayTrong.layoutParams.height = 0
             nhomNayTrong.layoutParams.width = 0
         }
+        val toolBar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
+
+        // Lấy màu hiện tại của Toolbar
+        val toolbarColor = (toolBar.background as ColorDrawable).color
+        val drawable2 = ContextCompat.getDrawable(requireActivity(), R.drawable.bovuong)?.mutate() as GradientDrawable
+        drawable2.setColor(toolbarColor)
         val add = view.findViewById<ImageView>(R.id.user_Groups_add)
+        add.background = drawable2
         add.setOnClickListener {
             themContactVaoGroup()
         }
         super.onViewCreated(view, savedInstanceState)
     }
 
-    fun chiase() {
+    fun chiase(selectedUsers: MutableList<User>) {
 
-        val phoneNumbers = getGroupContacts(requireContext(), nameGroup)
-        if (phoneNumbers.isEmpty()) {
-            Log.d("DEBUG", "Không có số điện thoại nào trong nhóm")
-            return
+        var ds_Email = listOf<String>()
+        for (user in selectedUsers){
+            val email = ChucNang().getEmailFromPhone(requireActivity(), user.mobile)
+            if ( email != null){
+                ds_Email += email
+            }
         }
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "message/rfc822"  // Chỉ mở ứng dụng email
-            putExtra(Intent.EXTRA_SUBJECT, "Tiêu đề email")
-            putExtra(Intent.EXTRA_TEXT, "Nội dung email")
+        if ( ds_Email.isNotEmpty() ){
+            ChucNang().moUngDungEmail(requireActivity(), ds_Email)
+        } else {
+            adapter.deselectAll()
+            Toast.makeText(requireActivity(), "Các số vừa chọn không thấy email", Toast.LENGTH_SHORT).show()
         }
-        val chooser = Intent.createChooser(intent, "Chia sẻ qua Email:")
-        startActivity(chooser)
         true
 
     }
@@ -229,7 +240,7 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         }
         val guiemail = toolbar.menu.findItem(R.id.menu_Group_Email)
         guiemail.setOnMenuItemClickListener{
-            chiase()
+            chiase(dsUser)
             true
         }
         val sharedPref = requireActivity().getSharedPreferences("CaiDat", Context.MODE_PRIVATE)
@@ -280,11 +291,6 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
                     true
                 }
-
-                R.id.menu_Group_Email -> {
-                    chiase()
-                    true
-                }
                 R.id.menu_UserGroup_LongClickOneOrMuch_ChinhSua -> {
                     val contactUri = ChucNang().getContactUriByPhoneNumber(
                         selectedUsers[0].mobile,
@@ -331,7 +337,7 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     true
                 }
                 R.id.menu_UserGroup_LongClickOneOrMuch_GuiEmail -> {
-                    chiase()
+                    chiase(selectedUsers)
                     true
                 }
                 R.id.menu_UserGroup_LongClickOneOrMuch_ChonTatCa -> {

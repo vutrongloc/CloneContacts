@@ -3,61 +3,75 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-
+    android:background="@color/black"
     android:gravity="center">
 
-    <TextView
-        android:id="@+id/callee_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="24sp"
-        android:layout_marginBottom="10dp"
-        android:text="Unknown" />
-
-    <TextView
-        android:id="@+id/callee_number"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:layout_marginBottom="10dp"
-        android:text="Number" />
-
-    <TextView
-        android:id="@+id/call_duration"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:text="Dialing..." />
-
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginBottom="10dp"
-        android:layout_marginTop="32dp">
+        android:layout_height="match_parent">
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#804F89"
+            android:src="@drawable/outgoing"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/callee_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:layout_marginBottom="10dp"
+                android:text="Unknown" />
 
-        <Button
-            android:id="@+id/speaker_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:drawableLeft="@drawable/volume_up"
-            android:text="Mở loa"
-            android:layout_marginRight="15dp"/>
+            <TextView
+                android:id="@+id/callee_number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:layout_marginBottom="10dp"
+                android:text="Number" />
 
-        <Button
-            android:id="@+id/mute_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Tắt âm"
-            android:drawableLeft="@drawable/volume_off"
-            android:layout_marginRight="15dp"/>
-    </LinearLayout>
-    <Button
-        android:id="@+id/end_call_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:drawableLeft="@drawable/phone_disabled"
-        android:text="Kết thúc" />
+            <TextView
+                android:id="@+id/call_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:text="Đang gọi..." />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="32dp">
+
+                <Button
+                    android:id="@+id/speaker_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableLeft="@drawable/volume_up"
+                    android:text="Mở loa"
+                    android:layout_marginRight="15dp"/>
+
+                <Button
+                    android:id="@+id/mute_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tắt âm"
+                    android:drawableLeft="@drawable/mic_off"
+                    android:layout_marginRight="15dp"/>
+            </LinearLayout>
+            <Button
+                android:id="@+id/end_call_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@drawable/call_end"
+                android:text="Kết thúc" />
+        </LinearLayout>
+    </FrameLayout>
 </LinearLayout>

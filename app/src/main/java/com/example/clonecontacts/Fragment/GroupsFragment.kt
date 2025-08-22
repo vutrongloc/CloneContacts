@@ -6,6 +6,9 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -58,16 +61,25 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     }
 
     fun diaLogAddGroup(tieuDeDiaLog: String, group: Group) {
+        val toolBar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
+        val toolbarColor = (toolBar.background as ColorDrawable).color
+        val drawable = ContextCompat.getDrawable(requireActivity(), R.drawable.bovuong)?.mutate() as GradientDrawable
+        drawable.setColor(toolbarColor)
+
         val dialog = Dialog(requireActivity())
         dialog.setCancelable(false)
         dialog.setCanceledOnTouchOutside(false)
         val layoutInflater = LayoutInflater.from(requireActivity())
         val view = layoutInflater.inflate(R.layout.custom_dialog, null)
+        view.background = drawable
         dialog.setContentView(view)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
         val textEditText = view.findViewById<EditText>(R.id.dialog_TieuDe)
         var tieuDe = view.findViewById<TextView>(R.id.textView)
         val huy = view.findViewById<TextView>(R.id.dialog_HuyBo)
         val ok = view.findViewById<TextView>(R.id.dialog_OK)
+
         tieuDe.setText(tieuDeDiaLog.toString())
         dialog.show()
         huy.setOnClickListener {
@@ -75,9 +87,13 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         }
         if (tieuDeDiaLog.equals("Tạo một nhóm mới")) {
             ok.setOnClickListener {
-                createContactGroup(textEditText.text.toString().trim(), requireActivity())
-                getGroup()
-                dialog.dismiss()
+                if(textEditText.text.toString().trim().isNullOrEmpty()){
+                    Toast.makeText(requireActivity(),"Tên nhóm chưa được nhập", Toast.LENGTH_SHORT).show()
+                }else{
+                    createContactGroup(textEditText.text.toString().trim(), requireActivity())
+                    getGroup()
+                    dialog.dismiss()
+                }
             }
         } else {
             ok.setOnClickListener {

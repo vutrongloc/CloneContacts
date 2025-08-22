@@ -54,7 +54,7 @@ class UserFragment : Fragment() {
         }
         val delete = view.findViewById<ImageView>(R.id.user_delete)
         delete.setOnClickListener {
-            ChucNang().kiemTraQuyenGhiDanhBaDeXoaContacts(user.mobile,requireActivity(),UserFragment(),true)
+            ChucNang().kiemTraQuyenGhiDanhBaDeXoaContacts(user.mobile,requireActivity(), user,true)
         }
         val chiaSe = view.findViewById<ImageView>(R.id.user_share)
         chiaSe.setOnClickListener {
@@ -74,7 +74,7 @@ class UserFragment : Fragment() {
         }
         val back = view.findViewById<ImageView>(R.id.user_back)
         back.setOnClickListener {
-            ChucNang().quayLaiFragment(requireActivity(),UserFragment())
+            ChucNang().quayLaiFragment(requireActivity(), User())
         }
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
