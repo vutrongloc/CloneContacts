@@ -80,27 +80,20 @@ class MainActivity : AppCompatActivity() {
                 ) {
                     Toast.makeText(
                         this,
-                        "This app is now set as default dialer",
+                        "Ứng dụng này hiện được đặt làm trình quay số mặc định",
                         Toast.LENGTH_SHORT
                     ).show()
-                    Log.d(TAG, "Default dialer set successfully")
-                    // Navigate to dashboard or perform other actions here if needed
                 } else {
                     Toast.makeText(
                         this,
-                        "Please set this app as default calling app to proceed",
+                        "Vui lòng đặt ứng dụng này làm ứng dụng gọi điện mặc định để tiếp tục",
                         Toast.LENGTH_SHORT
                     ).show()
-                    Log.d(TAG, "App is not set as default dialer")
                 }
             } else {
-                Log.d(
-                    TAG,
-                    "Something went wrong while setting as default, most likely user cancelled the popup"
-                )
                 Toast.makeText(
                     this,
-                    "Please set this app as default calling app to proceed",
+                    "Vui lòng đặt ứng dụng này làm ứng dụng gọi điện mặc định để tiếp tục",
                     Toast.LENGTH_SHORT
                 ).show()
             }

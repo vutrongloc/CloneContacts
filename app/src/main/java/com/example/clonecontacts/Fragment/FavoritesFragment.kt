@@ -30,6 +30,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.clonecontacts.Adapter.ContactsFavoritesAdapter
 import com.example.clonecontacts.Adapter.DsAdapter
 import com.example.clonecontacts.ChucNang
 import com.example.clonecontacts.Model.Group
@@ -78,7 +79,6 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
             themContactsYeuThich(dsUser_Favorites)
         }
     }
-
 
 
     fun yeuCauQuyenDayDu() {
@@ -241,39 +241,43 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     }
 
     fun themContactsYeuThich(dsUser: MutableList<User>) {
-        val array: MutableList<String> = mutableListOf()
+        val array: MutableList<User> = mutableListOf()
         val checkedItems: MutableList<Boolean> = mutableListOf()
-        val phoneNumbers: MutableList<String> = mutableListOf() // Lưu số điện thoại tương ứng
 
         for (user in dsUser) {
             val contactId = getContactIdByPhoneNumber(user.mobile)
             contactId?.let {
-                array.add(user.name)
-                phoneNumbers.add(user.mobile)
+                array.add(user)
                 checkedItems.add(kiemTraXemDaDuocDanhDauYeuThichHayChua(it) == 1)
             }
         }
 
-        val builder = AlertDialog.Builder(requireContext())
-        builder.setMultiChoiceItems(
-            array.toTypedArray(),
-            checkedItems.toBooleanArray()
-        ) { _, which, isChecked ->
-            val phoneNumber = phoneNumbers[which]
-            danhDauYeuThich(phoneNumber)
+        val dialogView =
+            LayoutInflater.from(requireContext()).inflate(R.layout.dialog_contacts_favorites, null)
+        val recyclerView = dialogView.findViewById<RecyclerView>(R.id.recyclerContacts)
+
+        val adapter = ContactsFavoritesAdapter(array, checkedItems) { user, isChecked ->
+            danhDauYeuThich(user.mobile)
         }
 
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
 
-        val dialog = builder.create()
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setPositiveButton("Hoàn thành", null)
+            .create()
         val toolBar = activity?.findViewById<Toolbar>(R.id.main_Toolbar)
 
         // Lấy màu hiện tại của Toolbar
         val toolbarColor = (toolBar?.background as ColorDrawable).color
-        val drawable2 = ContextCompat.getDrawable(requireActivity(), R.drawable.bovuong)?.mutate() as GradientDrawable
+        val drawable2 = ContextCompat.getDrawable(requireActivity(), R.drawable.bovuong)
+            ?.mutate() as GradientDrawable
         drawable2.setColor(toolbarColor)
         dialog.window?.setBackgroundDrawable(drawable2)
         dialog.show()
     }
+
 
     fun hamXuatKiTu(User: User): Char {
         var listName1 = User.name.split(" ")
@@ -545,12 +549,20 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
 
                     R.id.menu_Favorites_LongClickOne_GuiEmail -> {
-                        val email = ChucNang().getEmailFromPhone(requireActivity(), selectedUsers[0].mobile)
+                        val email =
+                            ChucNang().getEmailFromPhone(requireActivity(), selectedUsers[0].mobile)
                         if (email != null) {
-                            ChucNang().moUngDungEmail(requireActivity(), listOf(email)) // hàm bạn đã viết để mở email
+                            ChucNang().moUngDungEmail(
+                                requireActivity(),
+                                listOf(email)
+                            ) // hàm bạn đã viết để mở email
                         } else {
                             adapter.deselectAll()
-                            Toast.makeText(requireActivity(), "Không tìm thấy email cho số này", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                requireActivity(),
+                                "Không tìm thấy email cho số này",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                         true
                     }

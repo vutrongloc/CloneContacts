@@ -7,6 +7,7 @@ import android.telecom.Call
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.example.clonecontacts.R
 import com.example.clonecontacts.Service.CallManager
@@ -37,7 +38,9 @@ class IncomingCallActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_incoming_call)
+        setupFullScreenMode()
 
         // Liên kết các thành phần giao diện
         callerNumber = findViewById(R.id.caller_number)
@@ -60,6 +63,7 @@ class IncomingCallActivity : AppCompatActivity() {
                     Call.STATE_RINGING -> {
                         callDuration.visibility = View.GONE
                     }
+
                     Call.STATE_ACTIVE -> {
                         callStartTime = System.currentTimeMillis()
                         isCallActive = true
@@ -67,6 +71,7 @@ class IncomingCallActivity : AppCompatActivity() {
                         handler.removeCallbacks(updateTimerRunnable) // Xóa timer cũ nếu có
                         handler.post(updateTimerRunnable) // Bắt đầu đếm thời gian
                     }
+
                     Call.STATE_DISCONNECTED -> {
                         isCallActive = false
                         handler.removeCallbacks(updateTimerRunnable)
@@ -101,12 +106,14 @@ class IncomingCallActivity : AppCompatActivity() {
                 hangupButton.visibility = View.GONE
                 callDuration.visibility = View.GONE
             }
+
             Call.STATE_ACTIVE -> {
                 acceptButton.visibility = View.GONE
                 rejectButton.visibility = View.GONE
                 hangupButton.visibility = View.VISIBLE
                 callDuration.visibility = View.VISIBLE
             }
+
             Call.STATE_DISCONNECTED -> {
                 acceptButton.visibility = View.GONE
                 rejectButton.visibility = View.GONE
@@ -115,6 +122,14 @@ class IncomingCallActivity : AppCompatActivity() {
                 finish()
             }
         }
+    }
+
+    private fun setupFullScreenMode() {
+        window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_FULLSCREEN
+                )
     }
 
     override fun onDestroy() {

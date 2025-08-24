@@ -4,6 +4,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.PorterDuff
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -28,6 +30,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 
 class UserFragment : Fragment() {
+    lateinit var toolbar: Toolbar
+    lateinit var bottom: BottomNavigationView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,12 +42,19 @@ class UserFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        toolbar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
+        bottom = requireActivity().findViewById<BottomNavigationView>(R.id.bottom)
         val user = arguments?.getSerializable("user") as User
         val ten = view.findViewById<TextView>(R.id.textView1)
+        val call = view.findViewById<ImageView>(R.id.call_fragment_user)
+        call.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP)
+        val email = view.findViewById<ImageView>(R.id.email_fragment_user)
+        email.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP)
         ten.setText(user.name)
         val nen = view.findViewById<LinearLayout>(R.id.anhNen)
         ChucNang().thayDoiAnhDaiDien(nen, user.name)
         goiDien(user)
+        guiEmail(user.mobile)
         val nhanTin = view.findViewById<ImageView>(R.id.user_mess)
         nhanTin.setOnClickListener {
             ChucNang().sendSMS(user.mobile, "",requireActivity())
@@ -80,17 +91,30 @@ class UserFragment : Fragment() {
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    requireActivity().supportFragmentManager.popBackStack()
-                    val toolbar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
-                    toolbar.visibility = View.VISIBLE
-                    val bottom = requireActivity().findViewById<BottomNavigationView>(R.id.bottom)
-                    bottom.visibility = View.VISIBLE
+                    if(requireActivity().supportFragmentManager.popBackStackImmediate()){
+                        toolbar.visibility = View.VISIBLE
+                        bottom.visibility = View.VISIBLE
+                    }else{
+                        requireActivity().finish()
+                    }
                 }
             }
         )
         super.onViewCreated(view, savedInstanceState)
     }
 
+    fun guiEmail(phoneNumber: String){
+        val email = view?.findViewById<TextView>(R.id.textView3)
+        val emailFromFhone = ChucNang().getEmailFromPhone(requireActivity(), phoneNumber)
+        if (emailFromFhone != null){
+            email?.setText(emailFromFhone)
+            email?.setOnClickListener {
+                ChucNang().moUngDungEmail(requireActivity(), listOf(emailFromFhone))
+            }
+        }else{
+            email?.setText("Không có email")
+        }
+    }
 
 
     fun danhDauYeuThich(phoneNumber: String, Image: ImageView) {
@@ -264,4 +288,5 @@ class UserFragment : Fragment() {
             startActivity(intent)
         }
     }
+
 }

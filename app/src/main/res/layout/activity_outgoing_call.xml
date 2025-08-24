@@ -2,75 +2,110 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/black"
-    android:gravity="center">
+    android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
         <ImageView
+            android:id="@+id/background_outgoing_call"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="#804F89"
-            android:src="@drawable/outgoing"/>
+            android:src="@drawable/outgoing" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
             android:orientation="vertical">
+
             <TextView
                 android:id="@+id/callee_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="24sp"
                 android:layout_marginBottom="10dp"
-                android:text="Unknown" />
+                android:layout_marginTop="50dp"
+                android:shadowColor="#80000000"
+                android:shadowDx="4"
+                android:shadowDy="4"
+                android:shadowRadius="3"
+                android:layout_gravity="center"
+                android:text="Unknown"
+                android:textColor="@color/black"
+                android:textSize="24sp" />
 
             <TextView
                 android:id="@+id/callee_number"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
                 android:layout_marginBottom="10dp"
-                android:text="Number" />
+                android:text="Number"
+                android:layout_gravity="center"
+                android:textColor="@color/black"
+                android:shadowColor="#80000000"
+                android:shadowDx="4"
+                android:shadowDy="4"
+                android:shadowRadius="3"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/call_duration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:text="Đang gọi..." />
+                android:text="Đang gọi..."
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:textColor="@color/black"
+                android:shadowColor="#80000000"
+                android:shadowDx="4"
+                android:shadowDy="4"
+                android:shadowRadius="3"
+                android:textSize="18sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center"
                 android:layout_marginBottom="10dp"
-                android:layout_marginTop="32dp">
+                android:gravity="center"
+                android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/speaker_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginRight="15dp"
+                    android:backgroundTint="#D5CDCD"
                     android:drawableLeft="@drawable/volume_up"
                     android:text="Mở loa"
-                    android:layout_marginRight="15dp"/>
+                    android:elevation="8dp"
+                    android:translationZ="8dp"
+                    android:textColor="@color/black" />
 
                 <Button
                     android:id="@+id/mute_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Tắt âm"
+                    android:layout_marginRight="15dp"
+                    android:backgroundTint="#D5CDCD"
                     android:drawableLeft="@drawable/mic_off"
-                    android:layout_marginRight="15dp"/>
+                    android:text="Tắt âm"
+                    android:elevation="8dp"
+                    android:translationZ="8dp"
+                    android:textColor="@color/black" />
             </LinearLayout>
+
             <Button
                 android:id="@+id/end_call_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="50dp"
+                android:backgroundTint="@color/red"
                 android:drawableLeft="@drawable/call_end"
+                android:elevation="8dp"
+                android:translationZ="8dp"
                 android:text="Kết thúc" />
         </LinearLayout>
     </FrameLayout>

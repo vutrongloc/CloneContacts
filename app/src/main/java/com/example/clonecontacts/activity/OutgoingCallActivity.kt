@@ -6,15 +6,19 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.telecom.Call
 import android.telecom.TelecomManager
 import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -31,7 +35,7 @@ class OutgoingCallActivity : AppCompatActivity() {
     private lateinit var endCallButton: Button
     private lateinit var speakerButton: Button
     private lateinit var muteButton: Button
-
+    private lateinit var background: ImageView
     private var callStartTime: Long = 0
     private var isCallActive = false
     private val handler = Handler(Looper.getMainLooper())
@@ -64,14 +68,20 @@ class OutgoingCallActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_outgoing_call)
-
+        setupFullScreenMode()
         calleeName = findViewById(R.id.callee_name)
         calleeNumber = findViewById(R.id.callee_number)
         callStatus = findViewById(R.id.call_duration)
         endCallButton = findViewById(R.id.end_call_button)
         speakerButton = findViewById(R.id.speaker_button)
         muteButton = findViewById(R.id.mute_button)
+        background = findViewById(R.id.background_outgoing_call)
+
+        val sharedPref = getSharedPreferences("ColorPicker", Context.MODE_PRIVATE)
+        val color = sharedPref.getInt("selected_color", Color.rgb(255, 165, 0))
+        background.setBackgroundColor(color)
 
         val number = intent.getStringExtra("callee_number") ?: ""
         val name = intent.getStringExtra("callee_name")
@@ -108,6 +118,14 @@ class OutgoingCallActivity : AppCompatActivity() {
                 callStateReceiver,
                 IntentFilter(MyInCallService.ACTION_CALL_STATE_CHANGED)
             )
+    }
+
+    private fun setupFullScreenMode() {
+        window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_FULLSCREEN
+                )
     }
 
     private fun updateUI(state: Int) {
