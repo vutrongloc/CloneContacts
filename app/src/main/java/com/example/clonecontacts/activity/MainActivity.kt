@@ -34,6 +34,7 @@ import com.example.clonecontacts.ChucNang
 import com.example.clonecontacts.Fragment.ContactsFragment
 import com.example.clonecontacts.Fragment.FavoritesFragment
 import com.example.clonecontacts.Fragment.GroupsFragment
+import com.example.clonecontacts.Fragment.HistoryFragment
 import com.example.clonecontacts.Fragment.UserFragment
 import com.example.clonecontacts.Model.User
 import com.example.clonecontacts.R
@@ -194,7 +195,8 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 R.id.Favorites -> replaceFragment(FavoritesFragment())
-                else -> replaceFragment(GroupsFragment())
+                R.id.Groups -> replaceFragment(GroupsFragment())
+                else -> replaceFragment(HistoryFragment())
             }
         }
     }

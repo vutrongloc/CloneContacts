@@ -1,12 +1,10 @@
 package com.example.clonecontacts
 
-import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.PendingIntent
 import android.content.ContentProviderOperation
 import android.content.ContentResolver
-import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -22,6 +20,7 @@ import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.CallLog
 import android.provider.ContactsContract
 import android.telecom.TelecomManager
 import android.util.Log
@@ -36,12 +35,13 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
-import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.FileProvider
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.clonecontacts.Adapter.ContactsFavoritesAdapter
 import com.example.clonecontacts.Adapter.DsAdapter
+import com.example.clonecontacts.Model.CallHistory
 import com.example.clonecontacts.Model.Group
 import com.example.clonecontacts.Model.User
 import com.example.clonecontacts.activity.MainActivity
@@ -51,6 +51,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.slider.Slider
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class ChucNang {
     fun chiaSe(user: User, activity: FragmentActivity) {
@@ -243,6 +246,7 @@ class ChucNang {
             Toast.makeText(activity, "Lỗi khi chia sẻ: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
+
     fun getEmailFromPhone(context: Context, phoneNumber: String): String? {
         val contentResolver = context.contentResolver
 
@@ -286,7 +290,12 @@ class ChucNang {
         return null // Không tìm thấy email
     }
 
-    fun moUngDungEmail(activity: FragmentActivity, emails: List<String>, subject: String? = null, body: String? = null) {
+    fun moUngDungEmail(
+        activity: FragmentActivity,
+        emails: List<String>,
+        subject: String? = null,
+        body: String? = null
+    ) {
         val intent = Intent(Intent.ACTION_SENDTO).apply {
             data = Uri.parse("mailto:") // bắt buộc để hệ thống hiểu là email
             putExtra(Intent.EXTRA_EMAIL, emails.toTypedArray()) // gửi nhiều người
@@ -295,7 +304,6 @@ class ChucNang {
         }
         activity.startActivity(intent)
     }
-
 
 
     fun sendSMS(phoneNumber: String, message: String, activity: FragmentActivity) {
@@ -308,7 +316,7 @@ class ChucNang {
                 activity, arrayOf(android.Manifest.permission.SEND_SMS),
                 2
             )
-            Log.d("nhantin","aaa")
+            Log.d("nhantin", "aaa")
         } else {
             val smsIntent = Intent(
                 Intent.ACTION_SENDTO, Uri.parse(
@@ -368,14 +376,14 @@ class ChucNang {
     fun quayLaiFragment(activity: FragmentActivity, user: User) {
         val isPopped = activity.supportFragmentManager.popBackStackImmediate()
         if (isPopped != true) {
-            if(!user.mobile.isNullOrEmpty()){
-                val shortcutManager =activity.getSystemService(ShortcutManager::class.java)
+            if (!user.mobile.isNullOrEmpty()) {
+                val shortcutManager = activity.getSystemService(ShortcutManager::class.java)
 
                 shortcutManager.removeDynamicShortcuts(listOf(user.mobile))
                 shortcutManager.disableShortcuts(listOf(user.mobile))
             }
             activity.finish()
-        }else{
+        } else {
             val toolbar = activity.findViewById<Toolbar>(R.id.main_Toolbar)
             toolbar.visibility = View.VISIBLE
             val bottom = activity.findViewById<BottomNavigationView>(R.id.bottom)
@@ -586,7 +594,7 @@ class ChucNang {
     }
 
     fun kiemTraXemSDTDaCoTrongGroupHayChua(
-        contactId: Long,
+        contactId: Long?,
         groupId: Long,
         activity: FragmentActivity
     ): Cursor {
@@ -620,7 +628,7 @@ class ChucNang {
                 val groupId = it.getString(it.getColumnIndexOrThrow(ContactsContract.Groups._ID))
                 val groupName =
                     it.getString(it.getColumnIndexOrThrow(ContactsContract.Groups.TITLE))
-                
+
                 Log.d(
                     "groups_debug",
                     "Tìm thấy nhóm: $groupName với ID: $groupId"
@@ -633,7 +641,7 @@ class ChucNang {
                 ) // Kiểm tra số lượng liên hệ trong nhóm
 
                 //val contactInfo = contacts.joinToString("\n") { "${it.name}: ${it.mobile}" }
-                if(!groupName.isNullOrEmpty()){
+                if (!groupName.isNullOrEmpty()) {
                     dsGroups.add(Group(groupName, contacts))
                 }
             }
@@ -824,93 +832,65 @@ class ChucNang {
     }
 
     fun dialogThemVaoGroup(activity: FragmentActivity, user: User, dsUser: MutableList<User>) {
-        val array: MutableList<String> = mutableListOf()
-        val checkedItems: MutableList<Boolean> = mutableListOf()
         val dsGroup = getContactGroups(activity)
+        val checkedItems: MutableList<Boolean> = mutableListOf()
+        val array: MutableList<String> = mutableListOf()
+
         for (group in dsGroup) {
             array.add(group.nameGroup)
-            checkedItems.add(false)
-        }
-        val builder = AlertDialog.Builder(activity)
-        builder.setMultiChoiceItems(
-            array.toTypedArray(),
-            checkedItems.toBooleanArray()
-        ) { _, which, isChecked ->
-            if (user.name.isNullOrEmpty()) {
-                Log.d("cochayvao", dsUser.size.toString())
-                for (user1 in dsUser) {
-                    danhDauGroup(user1, array[which], activity, "")
-                }
+            if (dsUser.isNullOrEmpty()) {
+                val contactId = ChucNang().getContactIDByPhoneNumber(user.mobile, activity)
+                val groupId = ChucNang().getGroupIDByNameGroup(group.nameGroup, activity)
+                val boolean = ChucNang().kiemTraXemSDTDaCoTrongGroupHayChua(
+                    contactId,
+                    groupId!!,
+                    activity
+                )?.count ?: 0 > 0
+                checkedItems.add(boolean)
             } else {
-                Log.d("cochayvao", "b")
-                danhDauGroup(user, array[which], activity, "")
+                checkedItems.add(false)
             }
+
         }
-        val dialog = builder.create()
+
+        val dialogView =
+            LayoutInflater.from(activity).inflate(R.layout.dialog_contacts_favorites, null)
+        val recyclerView = dialogView.findViewById<RecyclerView>(R.id.recyclerContacts)
+
+        val adapter = ContactsFavoritesAdapter(
+            mutableListOf(),
+            dsGroup,
+            checkedItems,
+            onCheckedChangeUser = { user, isChecked ->
+            },
+            onCheckedChangeGroup = { group, ischecked ->
+                if (user.name.isNullOrEmpty()) {
+                    Log.d("cochayvao", dsUser.size.toString())
+                    for (user1 in dsUser) {
+                        danhDauGroup(user1, group.nameGroup, activity, "")
+                    }
+                } else {
+                    Log.d("cochayvao", "b")
+                    danhDauGroup(user, group.nameGroup, activity, "Ton tai thi xoa")
+                }
+            })
+
+        recyclerView.layoutManager = LinearLayoutManager(activity)
+        recyclerView.adapter = adapter
+
+        val dialog = AlertDialog.Builder(activity)
+            .setView(dialogView)
+            .create()
+        val toolBar = activity?.findViewById<Toolbar>(R.id.main_Toolbar)
+
+        // Lấy màu hiện tại của Toolbar
+        val toolbarColor = (toolBar?.background as ColorDrawable).color
+        val drawable2 = ContextCompat.getDrawable(activity, R.drawable.bovuong)
+            ?.mutate() as GradientDrawable
+        drawable2.setColor(toolbarColor)
+        dialog.window?.setBackgroundDrawable(drawable2)
         dialog.show()
     }
-    fun deleteGroupByName(groupName: String, activity: FragmentActivity): Boolean {
-        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.WRITE_CONTACTS), 1001)
-            return false
-        }
-
-        try {
-            val contentResolver = activity.contentResolver
-            val groupId = ChucNang().getGroupIDByNameGroup(groupName, activity)
-            Log.d("DeleteGroup", "Group ID for '$groupName': $groupId")
-            if (groupId == null) {
-                Toast.makeText(activity, "Không tìm thấy nhóm '$groupName'", Toast.LENGTH_SHORT).show()
-                return false
-            }
-
-            val (accountType, accountName) = getGroupAccount(groupId, activity)
-            Log.d("DeleteGroup", "Group '$groupName' - Account Type: $accountType, Account Name: $accountName")
-            if (accountType != "com.local" || accountName != "Local Contacts") {
-                Toast.makeText(activity, "Không thể xóa nhóm '$groupName' vì nó không phải nhóm cục bộ", Toast.LENGTH_SHORT).show()
-                return false
-            }
-
-            val groupUri = ContentUris.withAppendedId(ContactsContract.Groups.CONTENT_URI, groupId)
-            var rowsDeleted = 0
-            var attempts = 0
-            while (attempts < 5) {  // Thử xóa tối đa 5 lần
-                rowsDeleted = contentResolver.delete(groupUri, null, null)
-                Log.d("DeleteGroup", "Rows deleted for group '$groupName' (attempt ${attempts + 1}): $rowsDeleted")
-                if (rowsDeleted > 0) break
-                attempts++
-                Thread.sleep(300) // Chờ một chút rồi thử lại
-            }
-
-            activity.contentResolver.notifyChange(ContactsContract.Groups.CONTENT_URI, null) // Xóa cache ContentResolver
-
-            if (rowsDeleted > 0) {
-                val intent = Intent(Intent.ACTION_PROVIDER_CHANGED)
-                intent.data = ContactsContract.Groups.CONTENT_URI
-                activity.sendBroadcast(intent)
-                Thread.sleep(500) // Debug only
-
-                if (checkGroupExists(groupId, activity)) {
-                    Log.w("DeleteGroup", "Group '$groupName' STILL EXISTS after deletion!")
-                    Toast.makeText(activity, "Không thể xóa nhóm '$groupName'", Toast.LENGTH_SHORT).show()
-                    return false
-                } else {
-                    Toast.makeText(activity, "Đã xóa nhóm '$groupName' thành công", Toast.LENGTH_SHORT).show()
-                    Log.d("DeleteGroup", "Successfully deleted group '$groupName' with ID: $groupId")
-                    return true
-                }
-            } else {
-                Toast.makeText(activity, "Không thể xóa nhóm '$groupName'", Toast.LENGTH_SHORT).show()
-                Log.w("DeleteGroup", "Failed to delete group '$groupName' after $attempts attempts")
-                return false
-            }
-        } catch (e: Exception) {
-            Toast.makeText(activity, "Lỗi khi xóa nhóm: ${e.message}", Toast.LENGTH_SHORT).show()
-            Log.e("DeleteGroup", "Error deleting group '$groupName': ${e.message}", e)
-            return false
-        }
-    }
-
 
     fun getGroupAccount(groupId: Long, activity: FragmentActivity): Pair<String?, String?> {
         val contentResolver = activity.contentResolver
@@ -923,14 +903,20 @@ class ChucNang {
         )
         cursor?.use {
             if (it.moveToFirst()) {
-                val accountType = it.getString(it.getColumnIndexOrThrow(ContactsContract.Groups.ACCOUNT_TYPE))
-                val accountName = it.getString(it.getColumnIndexOrThrow(ContactsContract.Groups.ACCOUNT_NAME))
-                Log.d("GroupAccount", "Group ID: $groupId - Account Type: $accountType, Account Name: $accountName")
+                val accountType =
+                    it.getString(it.getColumnIndexOrThrow(ContactsContract.Groups.ACCOUNT_TYPE))
+                val accountName =
+                    it.getString(it.getColumnIndexOrThrow(ContactsContract.Groups.ACCOUNT_NAME))
+                Log.d(
+                    "GroupAccount",
+                    "Group ID: $groupId - Account Type: $accountType, Account Name: $accountName"
+                )
                 return Pair(accountType, accountName)
             }
         }
         return Pair(null, null)
     }
+
     fun checkGroupExists(groupId: Long, activity: FragmentActivity): Boolean {
         val contentResolver = activity.contentResolver
         val cursor = contentResolver.query(
@@ -948,13 +934,30 @@ class ChucNang {
         Log.d("CheckGroupExists", "Group ID $groupId not found (cursor null)")
         return false
     }
-    fun doiTenNhom(groupId: Long, newGroupName: String,activity: FragmentActivity) {
-        if (ContextCompat.checkSelfPermission(activity, android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.READ_CONTACTS), 7)
+
+    fun doiTenNhom(groupId: Long, newGroupName: String, activity: FragmentActivity) {
+        if (ContextCompat.checkSelfPermission(
+                activity,
+                android.Manifest.permission.READ_CONTACTS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                activity,
+                arrayOf(android.Manifest.permission.READ_CONTACTS),
+                7
+            )
             return
         }
-        if (ContextCompat.checkSelfPermission(activity, android.Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.WRITE_CONTACTS), 8)
+        if (ContextCompat.checkSelfPermission(
+                activity,
+                android.Manifest.permission.WRITE_CONTACTS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                activity,
+                arrayOf(android.Manifest.permission.WRITE_CONTACTS),
+                8
+            )
             return
         }
         val resolver: ContentResolver = activity.contentResolver
@@ -970,15 +973,17 @@ class ChucNang {
         val selectionArgs = arrayOf(groupId.toString())
 
         val rowsUpdated = resolver.update(uri, values, where, selectionArgs)
-        if(rowsUpdated > 0){
-            Toast.makeText(activity,"Cập nhật tên group thành công",Toast.LENGTH_LONG).show()
+        if (rowsUpdated > 0) {
+            Toast.makeText(activity, "Cập nhật tên group thành công", Toast.LENGTH_LONG).show()
         }
     }
+
     fun deleteGroupPermanently(context: Context, groupId: Long): Boolean {
         val resolver = context.contentResolver
         return try {
             // 1. Xóa tất cả thành viên trong nhóm
-            val whereMembers = "${ContactsContract.Data.MIMETYPE}=? AND ${ContactsContract.CommonDataKinds.GroupMembership.GROUP_ROW_ID}=?"
+            val whereMembers =
+                "${ContactsContract.Data.MIMETYPE}=? AND ${ContactsContract.CommonDataKinds.GroupMembership.GROUP_ROW_ID}=?"
             val argsMembers = arrayOf(
                 ContactsContract.CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE,
                 groupId.toString()
@@ -999,7 +1004,6 @@ class ChucNang {
     }
 
 
-
     fun updateBottomNavigationColor(activity: Activity) {
         val bottomNavigationView = activity.findViewById<BottomNavigationView>(R.id.bottom)
         val toolBar = activity.findViewById<Toolbar>(R.id.main_Toolbar)
@@ -1012,7 +1016,10 @@ class ChucNang {
 
         // Tạo ColorStateList cho BottomNavigationView
         val colorStateList = ColorStateList(
-            arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf(-android.R.attr.state_checked)),
+            arrayOf(
+                intArrayOf(android.R.attr.state_checked),
+                intArrayOf(-android.R.attr.state_checked)
+            ),
             intArrayOf(toolbarColor, defaultUnfocusColor)
         )
 
@@ -1026,20 +1033,24 @@ class ChucNang {
         val toolBar = activity.findViewById<Toolbar>(R.id.main_Toolbar)
         toolBar.setBackgroundColor(newColor)  // Trực tiếp sử dụng mã màu ARGB
     }
-    fun updateBotronColor(activity: Activity,imageView: ImageView,imageView2: ImageView) {
+
+    fun updateBotronColor(activity: Activity, imageView: ImageView, imageView2: ImageView) {
         val toolBar = activity.findViewById<Toolbar>(R.id.main_Toolbar)
 
         // Lấy màu hiện tại của Toolbar
         val toolbarColor = (toolBar.background as ColorDrawable).color
 
         // Cập nhật màu cho botron
-        val drawable = ContextCompat.getDrawable(activity, R.drawable.botron)?.mutate() as GradientDrawable
+        val drawable =
+            ContextCompat.getDrawable(activity, R.drawable.botron)?.mutate() as GradientDrawable
         drawable.setColor(toolbarColor)
-        val drawable2 = ContextCompat.getDrawable(activity, R.drawable.bovuong)?.mutate() as GradientDrawable
+        val drawable2 =
+            ContextCompat.getDrawable(activity, R.drawable.bovuong)?.mutate() as GradientDrawable
         drawable2.setColor(toolbarColor)
         imageView.background = drawable
         imageView2.background = drawable2
     }
+
     fun showColorPickerDialog(activity: FragmentActivity, onColorSelected: (Int) -> Unit) {
         val dialogView = activity.layoutInflater.inflate(R.layout.dialog_color_picker, null)
 
@@ -1102,13 +1113,14 @@ class ChucNang {
 
         dialog.show()
     }
+
     fun diaLog_CaiDat(activity: FragmentActivity, adapter: DsAdapter) {
         val array: MutableList<String> = mutableListOf()
         val checkedItems: MutableList<Boolean> = mutableListOf()
         val sharedPref = activity.getSharedPreferences("CaiDat", Context.MODE_PRIVATE)
         val sharedPrefEdit = sharedPref.edit()
         val hienThiHinh = sharedPref.getBoolean("thu_nho_lien_he", true)
-        val hienThiSDT = sharedPref.getBoolean("hien_thi_sdt",false)
+        val hienThiSDT = sharedPref.getBoolean("hien_thi_sdt", false)
         checkedItems.add(hienThiHinh)
         checkedItems.add(hienThiSDT)
         checkedItems.add(true)
@@ -1120,19 +1132,19 @@ class ChucNang {
             array.toTypedArray(),
             checkedItems.toBooleanArray()
         ) { _, which, isChecked ->
-            if(array[which] == "Hiển thị hình thu nhỏ liên hệ"){
+            if (array[which] == "Hiển thị hình thu nhỏ liên hệ") {
                 sharedPrefEdit.putBoolean("thu_nho_lien_he", isChecked)
                 sharedPrefEdit.apply()
                 adapter.hienThiHinhThuNho = isChecked
                 adapter.notifyDataSetChanged()  // Cập nhật lại toàn bộ giao diện
             }
-            if(array[which] == "Hiển thị số điện thoại"){
+            if (array[which] == "Hiển thị số điện thoại") {
                 sharedPrefEdit.putBoolean("hien_thi_sdt", isChecked)
                 sharedPrefEdit.apply()
                 adapter.hienThiSDT = isChecked
                 adapter.notifyDataSetChanged()  // Cập nhật lại toàn bộ giao diện
             }
-            if(array[which] == "Hợp nhất các liên hệ trùng lặp"){
+            if (array[which] == "Hợp nhất các liên hệ trùng lặp") {
                 checkedItems[which] = true
             }
         }
@@ -1141,20 +1153,24 @@ class ChucNang {
 
         // Lấy màu hiện tại của Toolbar
         val toolbarColor = (toolBar?.background as ColorDrawable).color
-        val drawable2 = ContextCompat.getDrawable(activity, R.drawable.bovuong)?.mutate() as GradientDrawable
+        val drawable2 =
+            ContextCompat.getDrawable(activity, R.drawable.bovuong)?.mutate() as GradientDrawable
         drawable2.setColor(toolbarColor)
         dialog.window?.setBackgroundDrawable(drawable2)
         dialog.show()
     }
-    fun anHinhNgay(adapter: DsAdapter){
+
+    fun anHinhNgay(adapter: DsAdapter) {
         adapter.hienThiHinhThuNho = false
         adapter.notifyDataSetChanged()  // Cập nhật lại toàn bộ giao diện
     }
-    fun hienSDT(adapter: DsAdapter){
+
+    fun hienSDT(adapter: DsAdapter) {
         adapter.hienThiSDT = true
         adapter.notifyDataSetChanged()  // Cập nhật lại toàn bộ giao diện
     }
-    fun open_KeyBroad(activity: Activity){
+
+    fun open_KeyBroad(activity: Activity) {
         val toolBar = activity.findViewById<Toolbar>(R.id.main_Toolbar)
 
         // Lấy màu hiện tại của Toolbar
@@ -1176,13 +1192,16 @@ class ChucNang {
         val button0 = view.findViewById<Button>(R.id.button0_Bottomsheet)
         val call = view.findViewById<ImageView>(R.id.img_Bottomsheet_Call)
         val backSpace = view.findViewById<ImageView>(R.id.img_Backspace_Bottomssheet)
-        val numberButtons = listOf(button0, button1, button2, button3, button4,
-            button5, button6, button7, button8, button9)
+        val numberButtons = listOf(
+            button0, button1, button2, button3, button4,
+            button5, button6, button7, button8, button9
+        )
 
         numberButtons.forEach { btn ->
             btn.setBackgroundColor(toolbarColor)
         }
-        val drawable2 = ContextCompat.getDrawable(activity, R.drawable.bovuong)?.mutate() as GradientDrawable
+        val drawable2 =
+            ContextCompat.getDrawable(activity, R.drawable.bovuong)?.mutate() as GradientDrawable
         drawable2.setColor(toolbarColor)
         call.background = drawable2
         backSpace.background = drawable2
@@ -1222,11 +1241,14 @@ class ChucNang {
             editTextQuaySo.setText(editTextQuaySo.text.toString().dropLast(1))
         }
         call.setOnClickListener {
-            if (editTextQuaySo.text.toString().length != 10) {
+            if (editTextQuaySo.text.toString().isNullOrEmpty()) {
+                val user_History = ChucNang().getCallHistory(activity, true)
+                editTextQuaySo.setText(user_History[0].number)
+            } else if (editTextQuaySo.text.toString().length != 10) {
                 Toast.makeText(
                     activity,
-                    "Yêu cầu phải nhập dúng 10 số",
-                    Toast.LENGTH_LONG
+                    "Yêu cầu phải nhập đúng 10 số",
+                    Toast.LENGTH_SHORT
                 ).show()
             } else if (ContextCompat.checkSelfPermission(
                     activity,
@@ -1239,11 +1261,19 @@ class ChucNang {
                 )
 
             } else {
-                makeCall(User("", editTextQuaySo.text.toString()), activity)
+                makeCall(
+                    User(
+                        ChucNang().getContactNameFromNumber(
+                            activity,
+                            editTextQuaySo.text.toString()
+                        ) ?: "Không rõ", editTextQuaySo.text.toString()
+                    ), activity
+                )
             }
         }
         bottomSheetDialog.show()
     }
+
     fun makeCall(user: User, context: Context) {
         val telecomManager =
             context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
@@ -1269,4 +1299,93 @@ class ChucNang {
             context.startActivity(intent)
         }
     }
+
+    fun getContactNameFromNumber(context: Context, phoneNumber: String): String? {
+        val uri: Uri = Uri.withAppendedPath(
+            ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+            Uri.encode(phoneNumber)
+        )
+
+        val projection = arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME)
+        var contactName: String? = null
+
+        val cursor: Cursor? = context.contentResolver.query(
+            uri,
+            projection,
+            null,
+            null,
+            null
+        )
+
+        cursor?.use {
+            if (it.moveToFirst()) {
+                contactName =
+                    it.getString(it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME))
+            }
+        }
+
+        return contactName
+    }
+
+    fun getCallHistory(context: Context, oneOrMuch: Boolean): List<CallHistory> {
+        val callList = mutableListOf<CallHistory>()
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+
+        val projection = arrayOf(
+            CallLog.Calls.NUMBER,
+            CallLog.Calls.CACHED_NAME,
+            CallLog.Calls.TYPE,
+            CallLog.Calls.DATE,
+            CallLog.Calls.DURATION
+        )
+
+        val cursor: Cursor? = context.contentResolver.query(
+            CallLog.Calls.CONTENT_URI,
+            projection,
+            null,
+            null,
+            CallLog.Calls.DATE + " DESC"
+        )
+
+        cursor?.use {
+            val numberIndex = it.getColumnIndex(CallLog.Calls.NUMBER)
+            val nameIndex = it.getColumnIndex(CallLog.Calls.CACHED_NAME)
+            val typeIndex = it.getColumnIndex(CallLog.Calls.TYPE)
+            val dateIndex = it.getColumnIndex(CallLog.Calls.DATE)
+            val durationIndex = it.getColumnIndex(CallLog.Calls.DURATION)
+
+            while (it.moveToNext()) {
+                val number = it.getString(numberIndex)
+                val name = it.getString(nameIndex)
+                val typeInt = it.getInt(typeIndex)
+                val date = Date(it.getLong(dateIndex))
+                val duration = it.getInt(durationIndex)
+
+                val type = when (typeInt) {
+                    CallLog.Calls.INCOMING_TYPE -> "Gọi đến"
+                    CallLog.Calls.OUTGOING_TYPE -> "Gọi đi"
+                    CallLog.Calls.MISSED_TYPE -> "Nhỡ"
+                    CallLog.Calls.REJECTED_TYPE -> "Từ chối"
+                    CallLog.Calls.BLOCKED_TYPE -> "Chặn"
+                    else -> "Khác"
+                }
+
+                callList.add(
+                    CallHistory(
+                        number,
+                        name,
+                        type,
+                        sdf.format(date),
+                        duration
+                    )
+                )
+                if (oneOrMuch) {
+                    return callList
+                }
+            }
+        }
+
+        return callList
+    }
+
 }

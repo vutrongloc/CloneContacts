@@ -106,10 +106,10 @@ class OutgoingCallActivity : AppCompatActivity() {
         muteButton.setOnClickListener {
             if (MyInCallService.instance?.toggleMute() == true) {
                 muteButton.text = "Bật mic"
-                speakerButton.setCompoundDrawablesWithIntrinsicBounds(R.drawable.mic, 0, 0, 0)
+                muteButton.setCompoundDrawablesWithIntrinsicBounds(R.drawable.mic, 0, 0, 0)
             } else {
                 muteButton.text = "Tắt mic"
-                speakerButton.setCompoundDrawablesWithIntrinsicBounds(R.drawable.mic_off, 0, 0, 0)
+                muteButton.setCompoundDrawablesWithIntrinsicBounds(R.drawable.mic_off, 0, 0, 0)
             }
         }
 

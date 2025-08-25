@@ -13,4 +13,8 @@
         android:id="@+id/Groups"
         android:title="Groups"
         android:icon="@drawable/group"/>
+    <item
+        android:id="@+id/CallLogs"
+        android:title="Call Log"
+        android:icon="@drawable/call_log"/>
 </menu>

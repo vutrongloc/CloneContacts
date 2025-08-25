@@ -11,7 +11,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
-import android.telecom.TelecomManager
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -19,7 +18,6 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
@@ -37,12 +35,11 @@ import com.example.clonecontacts.Model.Group
 import com.example.clonecontacts.activity.MainActivity
 import com.example.clonecontacts.R
 import com.example.clonecontacts.Model.User
-import com.example.clonecontacts.activity.OutgoingCallActivity
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.util.Collections.swap
 
 class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     var dsUser_Favorites: MutableList<User> = mutableListOf()
+    var dsChecked_Favorites: MutableList<Boolean> = mutableListOf()
     var dsUserYeuThich: MutableList<User> = mutableListOf()
     lateinit var editTextTimKiem: EditText
     lateinit var adapter: DsAdapter
@@ -241,31 +238,25 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     }
 
     fun themContactsYeuThich(dsUser: MutableList<User>) {
-        val array: MutableList<User> = mutableListOf()
-        val checkedItems: MutableList<Boolean> = mutableListOf()
-
-        for (user in dsUser) {
-            val contactId = getContactIdByPhoneNumber(user.mobile)
-            contactId?.let {
-                array.add(user)
-                checkedItems.add(kiemTraXemDaDuocDanhDauYeuThichHayChua(it) == 1)
-            }
-        }
-
         val dialogView =
             LayoutInflater.from(requireContext()).inflate(R.layout.dialog_contacts_favorites, null)
         val recyclerView = dialogView.findViewById<RecyclerView>(R.id.recyclerContacts)
 
-        val adapter = ContactsFavoritesAdapter(array, checkedItems) { user, isChecked ->
-            danhDauYeuThich(user.mobile)
-        }
+        val adapter = ContactsFavoritesAdapter(
+            dsUser_Favorites,
+            mutableListOf(),
+            dsChecked_Favorites,
+            onCheckedChangeUser = { user, isChecked ->
+                danhDauYeuThich(user.mobile)
+            },
+            onCheckedChangeGroup = { group, ischecked ->
+            })
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
-            .setPositiveButton("Hoàn thành", null)
             .create()
         val toolBar = activity?.findViewById<Toolbar>(R.id.main_Toolbar)
 
@@ -348,6 +339,7 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
 
         cursor?.use {
             dsUser_Favorites.clear()
+            dsChecked_Favorites.clear()
             dsUserYeuThich.clear()
 
             val tempUserMap = mutableMapOf<String, User>() // Lưu các liên hệ theo CONTACT_ID
@@ -368,12 +360,12 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     val user = User(name, normalizedNumber)
                     tempUserMap[contactId.toString()] = user
                     dsUser_Favorites.add(user)
-                    Log.d("AllContacts", "name: $name, phone: $normalizedNumber")
 
-                    // Kiểm tra trạng thái yêu thích
-                    if (kiemTraXemDaDuocDanhDauYeuThichHayChua(contactId) == 1) {
+                    if(kiemTraXemDaDuocDanhDauYeuThichHayChua(contactId) == 1){
                         dsUserYeuThich.add(user)
-                        Log.d("FavoriteContact", "name: $name, phone: $normalizedNumber")
+                        dsChecked_Favorites.add(true)
+                    }else{
+                        dsChecked_Favorites.add(false)
                     }
                 }
             }

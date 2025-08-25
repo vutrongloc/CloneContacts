@@ -20,6 +20,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.clonecontacts.Adapter.ContactsFavoritesAdapter
 import com.example.clonecontacts.Adapter.DsAdapter
 import com.example.clonecontacts.ChucNang
 import com.example.clonecontacts.Model.Group
@@ -175,36 +176,55 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     }
 
     fun themContactVaoGroup() {
-        var array: Array<String> = arrayOf()
-        var checkedItems = booleanArrayOf()
+        var array: MutableList<User> = mutableListOf()
+        var checkedItems: MutableList<Boolean> = mutableListOf()
         for (user in dsUser) {
             val contactId = ChucNang().getContactIDByPhoneNumber(user.mobile,requireActivity())
             val groupId =ChucNang().getGroupIDByNameGroup(nameGroup,requireActivity())
             contactId?.let {
                 if (ChucNang().kiemTraXemSDTDaCoTrongGroupHayChua(it, groupId!!,requireActivity())?.count ?: 0 > 0) {
-                    checkedItems += true
-                    array += user.name
+                    checkedItems.add(true)
+                    array.add(user)
                 } else {
-                    checkedItems += false
-                    array += user.name
+                    checkedItems.add(false)
+                    array.add(user)
                 }
             }
         }
-        val builder: AlertDialog.Builder = AlertDialog.Builder(context)
-        builder
-            .setMultiChoiceItems(array, checkedItems) { dialog, which, isChecked ->
-                for (user in dsUser) {
-                    if (user.name.equals(array[which])) {
-                        ChucNang().danhDauGroup(user, nameGroup,requireActivity(),"Ton tai thi xoa")
-                    }
-                }
+
+        val dialogView =
+            LayoutInflater.from(activity).inflate(R.layout.dialog_contacts_favorites, null)
+        val recyclerView = dialogView.findViewById<RecyclerView>(R.id.recyclerContacts)
+
+        val adapter = ContactsFavoritesAdapter(
+            array,
+            mutableListOf(),
+            checkedItems,
+            onCheckedChangeUser = { user, isChecked ->
+                ChucNang().danhDauGroup(user, nameGroup,requireActivity(),"Ton tai thi xoa")
                 val nhomNayTrong = view?.findViewById<TextView>(R.id.user_Groups_NhomNayTrong)
                 nhomNayTrong?.setText("")
                 nhomNayTrong?.layoutParams?.height = 0
                 nhomNayTrong?.layoutParams?.width = 0
                 getContacts()
-            }
-        val dialog: AlertDialog = builder.create()
+            },
+            onCheckedChangeGroup = { group, ischecked ->
+            })
+
+        recyclerView.layoutManager = LinearLayoutManager(activity)
+        recyclerView.adapter = adapter
+
+        val dialog = AlertDialog.Builder(activity)
+            .setView(dialogView)
+            .create()
+        val toolBar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
+
+        // Lấy màu hiện tại của Toolbar
+        val toolbarColor = (toolBar?.background as ColorDrawable).color
+        val drawable2 = ContextCompat.getDrawable(requireActivity(), R.drawable.bovuong)
+            ?.mutate() as GradientDrawable
+        drawable2.setColor(toolbarColor)
+        dialog.window?.setBackgroundDrawable(drawable2)
         dialog.show()
     }
 
