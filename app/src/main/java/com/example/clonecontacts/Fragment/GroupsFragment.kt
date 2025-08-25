@@ -37,8 +37,8 @@ import com.example.clonecontacts.Model.User
 
 class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     lateinit var adapter: DsAdapter
-    lateinit var keyboard:ImageView
-    lateinit var add:ImageView
+    lateinit var keyboard: ImageView
+    lateinit var add: ImageView
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -48,6 +48,7 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         keyboard = view.findViewById<ImageView>(R.id.groups_Keyboard)
         add = view.findViewById<ImageView>(R.id.groups_add)
         yeuCauQuyenDayDu()
@@ -57,13 +58,13 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         add.setOnClickListener {
             diaLogAddGroup("Tạo một nhóm mới", Group())
         }
-        super.onViewCreated(view, savedInstanceState)
     }
 
     fun diaLogAddGroup(tieuDeDiaLog: String, group: Group) {
         val toolBar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
         val toolbarColor = (toolBar.background as ColorDrawable).color
-        val drawable = ContextCompat.getDrawable(requireActivity(), R.drawable.bovuong)?.mutate() as GradientDrawable
+        val drawable = ContextCompat.getDrawable(requireActivity(), R.drawable.bovuong)
+            ?.mutate() as GradientDrawable
         drawable.setColor(toolbarColor)
 
         val dialog = Dialog(requireActivity())
@@ -87,9 +88,10 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         }
         if (tieuDeDiaLog.equals("Tạo một nhóm mới")) {
             ok.setOnClickListener {
-                if(textEditText.text.toString().trim().isNullOrEmpty()){
-                    Toast.makeText(requireActivity(),"Tên nhóm chưa được nhập", Toast.LENGTH_SHORT).show()
-                }else{
+                if (textEditText.text.toString().trim().isNullOrEmpty()) {
+                    Toast.makeText(requireActivity(), "Tên nhóm chưa được nhập", Toast.LENGTH_SHORT)
+                        .show()
+                } else {
                     createContactGroup(textEditText.text.toString().trim(), requireActivity())
                     getGroup()
                     dialog.dismiss()
@@ -136,26 +138,29 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
             recyclerView?.adapter = adapter
         }
     }
-    fun doiMauUngDung(color: Int){
-        ChucNang().changeToolbarColor(requireActivity(),color)
+
+    fun doiMauUngDung(color: Int) {
+        ChucNang().changeToolbarColor(requireActivity(), color)
         ChucNang().updateBottomNavigationColor(requireActivity())
-        var currentFragment = requireActivity().supportFragmentManager.findFragmentById(R.id.frameLayout)
+        var currentFragment =
+            requireActivity().supportFragmentManager.findFragmentById(R.id.frameLayout)
         var ten = Fragment()
         ten = GroupsFragment()
         requireActivity().supportFragmentManager.beginTransaction().apply {
-            replace(R.id.frameLayout,ten)
+            replace(R.id.frameLayout, ten)
             commit()
         }
     }
+
     override fun onResume() {
         yeuCauQuyenDayDu()
-        ChucNang().updateBotronColor(requireActivity(),keyboard,add)
+        ChucNang().updateBotronColor(requireActivity(), keyboard, add)
         val toolbar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
         toolbar.menu.clear()
         toolbar.inflateMenu(R.menu.menu_group)
         val sharedPref = requireActivity().getSharedPreferences("CaiDat", Context.MODE_PRIVATE)
         val hienThiHinh = sharedPref.getBoolean("thu_nho_lien_he", true)
-        if(!hienThiHinh){
+        if (!hienThiHinh) {
             ChucNang().anHinhNgay(adapter)
         }
         toolbar.setOnMenuItemClickListener { menuItem ->
@@ -229,16 +234,19 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
                     true
                 }
+
                 R.id.menu_Group_VuongMien -> {
                     ChucNang().showColorPickerDialog(requireActivity()) { color ->
                         doiMauUngDung(color)
                     }
                     true
                 }
-                R.id.menu_Group_CaiDat ->{
-                        ChucNang().diaLog_CaiDat(requireActivity(),adapter)
-                        true
+
+                R.id.menu_Group_CaiDat -> {
+                    ChucNang().diaLog_CaiDat(requireActivity(), adapter)
+                    true
                 }
+
                 else -> false
             }
         }
@@ -246,191 +254,224 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     }
 
     fun yeuCauQuyenDayDu() {
-        val canReadContacts = ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.READ_CONTACTS)
-        val canWriteContacts = ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.WRITE_CONTACTS)
+        val canReadContacts = ContextCompat.checkSelfPermission(
+            requireContext(),
+            android.Manifest.permission.READ_CONTACTS
+        )
+        val canWriteContacts = ContextCompat.checkSelfPermission(
+            requireContext(),
+            android.Manifest.permission.WRITE_CONTACTS
+        )
 
         if (canReadContacts == PackageManager.PERMISSION_GRANTED && canWriteContacts == PackageManager.PERMISSION_GRANTED) {
             getGroup()
         } else {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.READ_CONTACTS, android.Manifest.permission.WRITE_CONTACTS), 200)
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(
+                    android.Manifest.permission.READ_CONTACTS,
+                    android.Manifest.permission.WRITE_CONTACTS
+                ),
+                200
+            )
         }
     }
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 200) {
             if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 getGroup()
             } else {
-                Toast.makeText(requireActivity(), "Cần cấp quyền đầy đủ để truy cập danh bạ", Toast.LENGTH_SHORT).show()
-                ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.READ_CONTACTS, android.Manifest.permission.WRITE_CONTACTS), 200)
+                Toast.makeText(
+                    requireActivity(),
+                    "Cần cấp quyền đầy đủ để truy cập danh bạ",
+                    Toast.LENGTH_SHORT
+                ).show()
+                ActivityCompat.requestPermissions(
+                    requireActivity(),
+                    arrayOf(
+                        android.Manifest.permission.READ_CONTACTS,
+                        android.Manifest.permission.WRITE_CONTACTS
+                    ),
+                    200
+                )
             }
         }
     }
 
-        fun createContactGroup(groupName: String, activity: FragmentActivity) {
-            val contentResolver = activity.contentResolver
+    fun createContactGroup(groupName: String, activity: FragmentActivity) {
+        val contentResolver = activity.contentResolver
 
-            val contentValues = ContentValues().apply {
-                put(ContactsContract.Groups.TITLE, groupName)
-                put(
-                    ContactsContract.Groups.ACCOUNT_TYPE,
-                    "com.local"
-                )  // Nhóm cục bộ, không thuộc tài khoản nào
-                put(ContactsContract.Groups.ACCOUNT_NAME, "Local Contacts")  // Tên tài khoản cục bộ
-            }
-
-            try {
-                val uri = contentResolver.insert(ContactsContract.Groups.CONTENT_URI, contentValues)
-
-                if (uri != null) {
-                    Toast.makeText(activity, "Nhóm '$groupName' đã được tạo!", Toast.LENGTH_SHORT)
-                        .show()
-                    Log.d("CreateGroup", "Nhóm '$groupName' đã được tạo với URI: $uri")
-                } else {
-                    Toast.makeText(activity, "Tạo nhóm thất bại!", Toast.LENGTH_SHORT).show()
-                    Log.e("CreateGroup", "Tạo nhóm '$groupName' thất bại.")
-                }
-            } catch (e: SecurityException) {
-                Toast.makeText(activity, "Không có quyền tạo nhóm danh bạ!", Toast.LENGTH_SHORT)
-                    .show()
-                Log.e("CreateGroup", "Lỗi bảo mật: ${e.message}")
-            } catch (e: Exception) {
-                Toast.makeText(activity, "Lỗi khi tạo nhóm: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
-                Log.e("CreateGroup", "Lỗi tạo nhóm '$groupName': ${e.message}", e)
-            }
+        val contentValues = ContentValues().apply {
+            put(ContactsContract.Groups.TITLE, groupName)
+            put(
+                ContactsContract.Groups.ACCOUNT_TYPE,
+                "com.local"
+            )  // Nhóm cục bộ, không thuộc tài khoản nào
+            put(ContactsContract.Groups.ACCOUNT_NAME, "Local Contacts")  // Tên tài khoản cục bộ
         }
 
+        try {
+            val uri = contentResolver.insert(ContactsContract.Groups.CONTENT_URI, contentValues)
 
-        override fun onSelectedUsersChanged(selectedUsers: MutableList<User>) {
-
+            if (uri != null) {
+                Toast.makeText(activity, "Nhóm '$groupName' đã được tạo!", Toast.LENGTH_SHORT)
+                    .show()
+                Log.d("CreateGroup", "Nhóm '$groupName' đã được tạo với URI: $uri")
+            } else {
+                Toast.makeText(activity, "Tạo nhóm thất bại!", Toast.LENGTH_SHORT).show()
+                Log.e("CreateGroup", "Tạo nhóm '$groupName' thất bại.")
+            }
+        } catch (e: SecurityException) {
+            Toast.makeText(activity, "Không có quyền tạo nhóm danh bạ!", Toast.LENGTH_SHORT)
+                .show()
+            Log.e("CreateGroup", "Lỗi bảo mật: ${e.message}")
+        } catch (e: Exception) {
+            Toast.makeText(activity, "Lỗi khi tạo nhóm: ${e.message}", Toast.LENGTH_SHORT)
+                .show()
+            Log.e("CreateGroup", "Lỗi tạo nhóm '$groupName': ${e.message}", e)
         }
+    }
 
-        lateinit var doiTen: MenuItem
-        override fun onSelectedGroupsChanged(selectedGroups: MutableList<Group>) {
-            val toolbar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
+
+    override fun onSelectedUsersChanged(selectedUsers: MutableList<User>) {
+
+    }
+
+    lateinit var doiTen: MenuItem
+    override fun onSelectedGroupsChanged(selectedGroups: MutableList<Group>) {
+        val toolbar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
+        toolbar.menu.clear()
+        Log.d("soluong", selectedGroups.size.toString())
+        toolbar.inflateMenu(R.menu.menu_group)
+        if (selectedGroups.size >= 1) {
             toolbar.menu.clear()
-            Log.d("soluong",selectedGroups.size.toString())
-            toolbar.inflateMenu(R.menu.menu_group)
-            if(selectedGroups.size >= 1){
-                toolbar.menu.clear()
-                toolbar.inflateMenu(R.menu.menu_longclickoneormuch_group)
-                doiTen = toolbar.menu.findItem(R.id.menu_LongClickOneOrMuch_Group_DoiTen)
-                doiTen.isVisible = selectedGroups.size == 1
-            }
-            toolbar.setOnMenuItemClickListener { menuItem ->
-                when (menuItem.itemId) {
-                    R.id.menu_LongClickOneOrMuch_Group_DoiTen -> {
-                        if (selectedGroups.size == 1) {
-                            diaLogAddGroup("Thay đổi tên nhóm", selectedGroups[0])
-                        }
-                        adapter.deselectGroupsAll()
-                        true
+            toolbar.inflateMenu(R.menu.menu_longclickoneormuch_group)
+            doiTen = toolbar.menu.findItem(R.id.menu_LongClickOneOrMuch_Group_DoiTen)
+            doiTen.isVisible = selectedGroups.size == 1
+        }
+        toolbar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.menu_LongClickOneOrMuch_Group_DoiTen -> {
+                    if (selectedGroups.size == 1) {
+                        diaLogAddGroup("Thay đổi tên nhóm", selectedGroups[0])
                     }
-
-                    R.id.menu_LongClickOneOrMuch_Group_SellectAll -> {
-                        adapter.selectGroupsAll()
-                        true
-                    }
-
-                    R.id.menu_LongClickOneOrMuch_Group_XoaBo -> {
-                        for (group in selectedGroups) {
-                            val groupID =
-                                ChucNang().getGroupIDByNameGroup(group.nameGroup, requireActivity())
-                            if (ChucNang().deleteGroupPermanently(requireContext(), groupID!!)) {
-                                Log.d("DeleteGroup", "Đã xóa nhóm: ${group.nameGroup}")
-                            } else {
-                                Log.e("DeleteGroup", "Không thể xóa nhóm: ${group.nameGroup}")
-                            }
-                        }
-                        adapter.deselectGroupsAll()
-                        getGroup() // Cập nhật lại danh sách
-                        true
-                    }
-
-                    R.id.menu_Group_XuatDanhBaTuTepVCF -> {
-                        if (ContextCompat.checkSelfPermission(
-                                requireActivity(),
-                                android.Manifest.permission.WRITE_CONTACTS
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            ActivityCompat.requestPermissions(
-                                requireActivity(),
-                                arrayOf(android.Manifest.permission.WRITE_CONTACTS),
-                                102
-                            )
-                        } else if (ContextCompat.checkSelfPermission(
-                                requireActivity(),
-                                android.Manifest.permission.READ_CONTACTS
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            ActivityCompat.requestPermissions(
-                                requireActivity(),
-                                arrayOf(android.Manifest.permission.READ_CONTACTS),
-                                102
-                            )
-                        } else {
-                            var currentFragment =
-                                requireActivity().supportFragmentManager.findFragmentById(R.id.frameLayout)
-                            var ten = ""
-                            if (currentFragment is ContactsFragment) {
-                                ten = "Contacts"
-                            } else if (currentFragment is FavoritesFragment) {
-                                ten = "Favorites"
-                            } else {
-                                ten = "Groups"
-                            }
-                            val contactImporter = ContactImporter(requireContext(), ten)
-                            val a = contactImporter.exportContactsToVcf()
-                            if (a) {
-                                Toast.makeText(
-                                    requireActivity(),
-                                    "Đã xuất tệp vào mục dowloads",
-                                    Toast.LENGTH_LONG
-                                )
-                                    .show()
-                            } else {
-                                Toast.makeText(
-                                    requireActivity(),
-                                    "Không xuất tệp thành công",
-                                    Toast.LENGTH_LONG
-                                )
-                                    .show()
-                            }
-                        }
-                        true
-                    }
-
-                    R.id.menu_Group_NhapDanhBaTuTepVCF -> {
-                        if (ContextCompat.checkSelfPermission(
-                                requireContext(),
-                                android.Manifest.permission.WRITE_CONTACTS
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            ActivityCompat.requestPermissions(
-                                requireActivity(),
-                                arrayOf(android.Manifest.permission.WRITE_CONTACTS),
-                                101
-                            )
-                        } else {
-                            requestContactPermission()
-                        }
-                        true
-                    }
-                    R.id.menu_Group_VuongMien -> {
-                        ChucNang().showColorPickerDialog(requireActivity()) { color ->
-                            doiMauUngDung(color)
-                        }
-                        true
-                    }
-                    R.id.menu_Group_CaiDat ->{
-                        ChucNang().diaLog_CaiDat(requireActivity(),adapter)
-                        true
-                    }
-                    else -> false
+                    adapter.deselectGroupsAll()
+                    true
                 }
+
+                R.id.menu_LongClickOneOrMuch_Group_SellectAll -> {
+                    adapter.selectGroupsAll()
+                    true
+                }
+
+                R.id.menu_LongClickOneOrMuch_Group_XoaBo -> {
+                    for (group in selectedGroups) {
+                        val groupID =
+                            ChucNang().getGroupIDByNameGroup(group.nameGroup, requireActivity())
+                        if (ChucNang().deleteGroupPermanently(requireContext(), groupID!!)) {
+                            Log.d("DeleteGroup", "Đã xóa nhóm: ${group.nameGroup}")
+                        } else {
+                            Log.e("DeleteGroup", "Không thể xóa nhóm: ${group.nameGroup}")
+                        }
+                    }
+                    adapter.deselectGroupsAll()
+                    getGroup() // Cập nhật lại danh sách
+                    true
+                }
+
+                R.id.menu_Group_XuatDanhBaTuTepVCF -> {
+                    if (ContextCompat.checkSelfPermission(
+                            requireActivity(),
+                            android.Manifest.permission.WRITE_CONTACTS
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        ActivityCompat.requestPermissions(
+                            requireActivity(),
+                            arrayOf(android.Manifest.permission.WRITE_CONTACTS),
+                            102
+                        )
+                    } else if (ContextCompat.checkSelfPermission(
+                            requireActivity(),
+                            android.Manifest.permission.READ_CONTACTS
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        ActivityCompat.requestPermissions(
+                            requireActivity(),
+                            arrayOf(android.Manifest.permission.READ_CONTACTS),
+                            102
+                        )
+                    } else {
+                        var currentFragment =
+                            requireActivity().supportFragmentManager.findFragmentById(R.id.frameLayout)
+                        var ten = ""
+                        if (currentFragment is ContactsFragment) {
+                            ten = "Contacts"
+                        } else if (currentFragment is FavoritesFragment) {
+                            ten = "Favorites"
+                        } else {
+                            ten = "Groups"
+                        }
+                        val contactImporter = ContactImporter(requireContext(), ten)
+                        val a = contactImporter.exportContactsToVcf()
+                        if (a) {
+                            Toast.makeText(
+                                requireActivity(),
+                                "Đã xuất tệp vào mục dowloads",
+                                Toast.LENGTH_LONG
+                            )
+                                .show()
+                        } else {
+                            Toast.makeText(
+                                requireActivity(),
+                                "Không xuất tệp thành công",
+                                Toast.LENGTH_LONG
+                            )
+                                .show()
+                        }
+                    }
+                    true
+                }
+
+                R.id.menu_Group_NhapDanhBaTuTepVCF -> {
+                    if (ContextCompat.checkSelfPermission(
+                            requireContext(),
+                            android.Manifest.permission.WRITE_CONTACTS
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        ActivityCompat.requestPermissions(
+                            requireActivity(),
+                            arrayOf(android.Manifest.permission.WRITE_CONTACTS),
+                            101
+                        )
+                    } else {
+                        requestContactPermission()
+                    }
+                    true
+                }
+
+                R.id.menu_Group_VuongMien -> {
+                    ChucNang().showColorPickerDialog(requireActivity()) { color ->
+                        doiMauUngDung(color)
+                    }
+                    true
+                }
+
+                R.id.menu_Group_CaiDat -> {
+                    ChucNang().diaLog_CaiDat(requireActivity(), adapter)
+                    true
+                }
+
+                else -> false
             }
         }
+    }
+
     fun requestContactPermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             if (ContextCompat.checkSelfPermission(
@@ -474,4 +515,4 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
             startActivityForResult(intent, PICK_VCF_REQUEST)
         }
     }
-    }
+}
