@@ -1034,7 +1034,7 @@ class ChucNang {
         toolBar.setBackgroundColor(newColor)  // Trực tiếp sử dụng mã màu ARGB
     }
 
-    fun updateBotronColor(activity: Activity, imageView: ImageView, imageView2: ImageView) {
+    fun updateBotronColor(activity: Activity, imageView: ImageView, imageView2: ImageView, imageView3: ImageView?) {
         val toolBar = activity.findViewById<Toolbar>(R.id.main_Toolbar)
 
         // Lấy màu hiện tại của Toolbar
@@ -1049,6 +1049,9 @@ class ChucNang {
         drawable2.setColor(toolbarColor)
         imageView.background = drawable
         imageView2.background = drawable2
+        if(imageView3 != null){
+            imageView3.background = drawable
+        }
     }
 
     fun showColorPickerDialog(activity: FragmentActivity, onColorSelected: (Int) -> Unit) {
@@ -1237,7 +1240,6 @@ class ChucNang {
             editTextQuaySo.setText(editTextQuaySo.text.toString().plus("9"))
         }
         backSpace.setOnClickListener {
-            val doDai = editTextQuaySo.text.toString().length
             editTextQuaySo.setText(editTextQuaySo.text.toString().dropLast(1))
         }
         call.setOnClickListener {
@@ -1298,6 +1300,25 @@ class ChucNang {
             intent.putExtra("callee_name", user.name)
             context.startActivity(intent)
         }
+    }
+
+    fun findPhoneNumberByName(name: String, activity: Activity): String? {
+        val resolver = activity.contentResolver
+        val cursor = resolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            null,
+            "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?",
+            arrayOf("%$name%"),
+            null
+        )
+
+        var phone: String? = null
+        cursor?.use {
+            if (it.moveToFirst()) {
+                phone = it.getString(it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+            }
+        }
+        return phone
     }
 
     fun getContactNameFromNumber(context: Context, phoneNumber: String): String? {

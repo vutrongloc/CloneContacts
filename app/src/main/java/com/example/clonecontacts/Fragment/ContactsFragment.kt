@@ -1,14 +1,17 @@
 package com.example.clonecontacts.Fragment
 
 import android.Manifest
+import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
+import android.speech.RecognizerIntent
 import android.telecom.TelecomManager
 import android.text.Editable
 import android.text.TextWatcher
@@ -40,8 +43,10 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     lateinit var adapter: DsAdapter
     var dsUser: MutableList<User> = mutableListOf()
     lateinit var editTextTimKiem: EditText
-    lateinit var keyboard:ImageView
-    lateinit var addContacts:ImageView
+    lateinit var keyboard: ImageView
+    lateinit var addContacts: ImageView
+    lateinit var mic: ImageView
+    private val REQUEST_CODE_SPEECH = 100
     private var textWatcher: TextWatcher? = null // Store the TextWatcher
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -66,11 +71,84 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         addContacts.setOnClickListener {
             themContacts()
         }
+        mic = view.findViewById(R.id.contacts_mic)
+        mic.setColorFilter(Color.WHITE)
+        mic.setOnClickListener {
+            startVoiceRecognition()
+        }
+
+    }
+
+    fun startVoiceRecognition() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN") // Tiếng Việt
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Nói tên hoặc số điện thoại...")
+        }
+        try {
+            startActivityForResult(intent, REQUEST_CODE_SPEECH)
+        } catch (e: Exception) {
+            Toast.makeText(
+                requireActivity(),
+                "Không hỗ trợ nhận diện giọng nói!",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_CODE_SPEECH && resultCode == RESULT_OK) {
+            val matches = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            val spokenText = matches?.get(0) ?: return
+
+            // Nếu nói là số điện thoại
+            if (spokenText.replace("\\s".toRegex(), "").matches(Regex("^0\\d{9}$"))) {
+                ChucNang().makeCall(
+                    User(
+                        ChucNang().getContactNameFromNumber(
+                            requireActivity(),
+                            spokenText.replace("\\s".toRegex(), "")
+                        ) ?: "Không rõ", spokenText.replace("\\s".toRegex(), "")
+                    ), requireActivity()
+                )
+            } else {
+                // Nếu nói tên thì tìm trong danh bạ
+                val phone = ChucNang().findPhoneNumberByName(spokenText, requireActivity())
+                if (phone != null) {
+                    ChucNang().makeCall(
+                        User(
+                            ChucNang().getContactNameFromNumber(
+                                requireActivity(),
+                                phone
+                            ) ?: "Không rõ", phone
+                        ), requireActivity()
+                    )
+                } else {
+                    Toast.makeText(
+                        requireActivity(),
+                        "Không tìm thấy số cho $spokenText",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
     }
 
     fun yeuCauQuyenDayDu() {
-        val canReadContacts = ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.READ_CONTACTS)
-        val canWriteContacts = ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.WRITE_CONTACTS)
+        val canReadContacts = ContextCompat.checkSelfPermission(
+            requireContext(),
+            android.Manifest.permission.READ_CONTACTS
+        )
+        val canWriteContacts = ContextCompat.checkSelfPermission(
+            requireContext(),
+            android.Manifest.permission.WRITE_CONTACTS
+        )
 
         if (canReadContacts == PackageManager.PERMISSION_GRANTED && canWriteContacts == PackageManager.PERMISSION_GRANTED) {
             if (tangHoacGiam != null && firstOrLast != null) {
@@ -79,10 +157,22 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                 getContacts(tangHoacGiam, firstOrLast)
             }
         } else {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.READ_CONTACTS, android.Manifest.permission.WRITE_CONTACTS), 200)
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(
+                    android.Manifest.permission.READ_CONTACTS,
+                    android.Manifest.permission.WRITE_CONTACTS
+                ),
+                200
+            )
         }
     }
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 200) {
             if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
@@ -92,41 +182,55 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     getContacts(tangHoacGiam, firstOrLast)
                 }
             } else {
-                Toast.makeText(requireActivity(), "Cần cấp quyền đầy đủ để truy cập danh bạ", Toast.LENGTH_SHORT).show()
-                ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.READ_CONTACTS, android.Manifest.permission.WRITE_CONTACTS), 200)
+                Toast.makeText(
+                    requireActivity(),
+                    "Cần cấp quyền đầy đủ để truy cập danh bạ",
+                    Toast.LENGTH_SHORT
+                ).show()
+                ActivityCompat.requestPermissions(
+                    requireActivity(),
+                    arrayOf(
+                        android.Manifest.permission.READ_CONTACTS,
+                        android.Manifest.permission.WRITE_CONTACTS
+                    ),
+                    200
+                )
             }
         }
     }
+
     override fun onResume() {
         yeuCauQuyenDayDu()
-        ChucNang().updateBotronColor(requireActivity(),keyboard,addContacts)
+        ChucNang().updateBotronColor(requireActivity(), keyboard, addContacts, mic)
         val toolbar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
         toolbar.menu.clear()
         toolbar.inflateMenu(R.menu.menu)
         val activity = requireActivity() as MainActivity
         val caidat = toolbar.menu.findItem(R.id.caiDat)
-        caidat.setOnMenuItemClickListener{
+        caidat.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.caiDat -> {
-                    ChucNang().diaLog_CaiDat(requireActivity(),adapter)
+                    ChucNang().diaLog_CaiDat(requireActivity(), adapter)
                     true
                 }
+
                 else -> false
             }
         }
         activity.setupToolbar()
         val sharedPref = activity.getSharedPreferences("CaiDat", Context.MODE_PRIVATE)
         val hienThiHinh = sharedPref.getBoolean("thu_nho_lien_he", true)
-        val hienThiSDT = sharedPref.getBoolean("hien_thi_sdt",false)
-        if(!hienThiHinh){
+        val hienThiSDT = sharedPref.getBoolean("hien_thi_sdt", false)
+        if (!hienThiHinh) {
             ChucNang().anHinhNgay(adapter)
         }
-        if (hienThiSDT){
+        if (hienThiSDT) {
             ChucNang().hienSDT(adapter)
         }
         textWatcher?.let { editTextTimKiem.addTextChangedListener(it) }
         super.onResume()
     }
+
     fun timKiem(dsUser: MutableList<User>) {
         editTextTimKiem = requireActivity().findViewById<EditText>(R.id.main_EdittextTimKiem)
         val nutThoat = requireActivity().findViewById<ImageView>(R.id.main_Back)
@@ -338,12 +442,20 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
 
                     R.id.menu_LongClickOne_GuiEmail -> {
-                        val email = ChucNang().getEmailFromPhone(requireActivity(), selectedUsers[0].mobile)
+                        val email =
+                            ChucNang().getEmailFromPhone(requireActivity(), selectedUsers[0].mobile)
                         if (email != null) {
-                            ChucNang().moUngDungEmail(requireActivity(), listOf(email)) // hàm bạn đã viết để mở email
+                            ChucNang().moUngDungEmail(
+                                requireActivity(),
+                                listOf(email)
+                            ) // hàm bạn đã viết để mở email
                         } else {
                             adapter.deselectAll()
-                            Toast.makeText(requireActivity(), "Không tìm thấy email cho số này", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                requireActivity(),
+                                "Không tìm thấy email cho số này",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                         true
                     }
@@ -485,20 +597,25 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
 
                     R.id.menu_LongClickMuch_GuiEmail -> {
                         var ds_Email = listOf<String>()
-                        for (user in selectedUsers){
+                        for (user in selectedUsers) {
                             val email = ChucNang().getEmailFromPhone(requireActivity(), user.mobile)
-                            if ( email != null){
+                            if (email != null) {
                                 ds_Email += email
                             }
                         }
-                        if ( ds_Email.isNotEmpty() ){
+                        if (ds_Email.isNotEmpty()) {
                             ChucNang().moUngDungEmail(requireActivity(), ds_Email)
                         } else {
                             adapter.deselectAll()
-                            Toast.makeText(requireActivity(), "Các số vừa chọn không thấy email", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                requireActivity(),
+                                "Các số vừa chọn không thấy email",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                         true
                     }
+
                     else -> false
                 }
             }
@@ -514,7 +631,8 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     override fun onSelectedGroupsChanged(selectedGroups: MutableList<Group>) {
         TODO("Not yet implemented")
     }
-    fun checkAndRequestPermissionsREAD_CONTACTS(){
+
+    fun checkAndRequestPermissionsREAD_CONTACTS() {
         if (ContextCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.READ_CONTACTS

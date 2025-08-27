@@ -154,7 +154,7 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
 
     override fun onResume() {
         yeuCauQuyenDayDu()
-        ChucNang().updateBotronColor(requireActivity(), keyboard, add)
+        ChucNang().updateBotronColor(requireActivity(), keyboard, add, null)
         val toolbar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
         toolbar.menu.clear()
         toolbar.inflateMenu(R.menu.menu_group)
