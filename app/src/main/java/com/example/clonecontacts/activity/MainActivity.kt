@@ -14,6 +14,7 @@ import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.telecom.TelecomManager
 import android.util.Log
 import android.view.View
@@ -156,7 +157,8 @@ class MainActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.main_Toolbar)
 
         val toolbarColor = (toolbar.background as ColorDrawable).color
-        val drawable = ContextCompat.getDrawable(this, R.drawable.bovuong)?.mutate() as GradientDrawable
+        val drawable =
+            ContextCompat.getDrawable(this, R.drawable.bovuong)?.mutate() as GradientDrawable
         drawable.setColor(toolbarColor)
 
         if (!dialogInitialized) {
@@ -170,14 +172,47 @@ class MainActivity : AppCompatActivity() {
         }
         toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                R.id.vuongMien -> showColorPicker()
-                R.id.timKiem -> showSearchBar()
-                R.id.sapXepTheo -> showSortDialog()
-                R.id.nhapDanhBaTuTep -> importContactsFromFile()
-                R.id.xuatDanhBaTuTep -> exportContactsToFile()
+                R.id.vuongMien -> {
+                    showColorPicker()
+                    true
+                }
+
+                R.id.timKiem -> {
+                    showSearchBar()
+                    true
+                }
+
+                R.id.sapXepTheo -> {
+                    showSortDialog()
+                    true
+                }
+
+                R.id.nhapDanhBaTuTep -> {
+                    importContactsFromFile()
+                    true
+                }
+
+                R.id.themContact -> {
+                    themContacts()
+                    true
+                }
+
+                R.id.xuatDanhBaTuTep -> {
+                    exportContactsToFile()
+                    true
+                }
+
                 else -> false
             }
         }
+    }
+
+    fun themContacts() {
+        val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
+            // Sets the MIME type to match the Contacts Provider
+            type = ContactsContract.RawContacts.CONTENT_TYPE
+        }
+        startActivity(intent)
     }
 
     // Setup exit button

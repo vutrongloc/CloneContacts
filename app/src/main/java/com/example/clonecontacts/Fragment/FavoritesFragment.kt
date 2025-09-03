@@ -191,7 +191,7 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
 
     override fun onResume() {
         yeuCauQuyenDayDu()
-        ChucNang().updateBotronColor(requireActivity(), keyboard, addContacts, null)
+        ChucNang().updateBotronColor(requireActivity(), keyboard, addContacts)
         val toolbar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
         toolbar.menu.clear()
         toolbar.inflateMenu(R.menu.menu)

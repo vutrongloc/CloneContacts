@@ -44,7 +44,6 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     var dsUser: MutableList<User> = mutableListOf()
     lateinit var editTextTimKiem: EditText
     lateinit var keyboard: ImageView
-    lateinit var addContacts: ImageView
     lateinit var mic: ImageView
     private val REQUEST_CODE_SPEECH = 100
     private var textWatcher: TextWatcher? = null // Store the TextWatcher
@@ -66,10 +65,6 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         keyboard = view.findViewById<ImageView>(R.id.contacts_Keyboard)
         keyboard.setOnClickListener {
             ChucNang().open_KeyBroad(requireActivity())
-        }
-        addContacts = view.findViewById<ImageView>(R.id.contacts_add)
-        addContacts.setOnClickListener {
-            themContacts()
         }
         mic = view.findViewById(R.id.contacts_mic)
         mic.setColorFilter(Color.WHITE)
@@ -201,7 +196,7 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
 
     override fun onResume() {
         yeuCauQuyenDayDu()
-        ChucNang().updateBotronColor(requireActivity(), keyboard, addContacts, mic)
+        ChucNang().updateBotronColor(requireActivity(), keyboard, mic)
         val toolbar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
         toolbar.menu.clear()
         toolbar.inflateMenu(R.menu.menu)
@@ -296,13 +291,6 @@ class ContactsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         textWatcher?.let { editTextTimKiem.removeTextChangedListener(it) } // Remove the TextWatcher
     }
 
-    fun themContacts() {
-        val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
-            // Sets the MIME type to match the Contacts Provider
-            type = ContactsContract.RawContacts.CONTENT_TYPE
-        }
-        startActivity(intent)
-    }
 
     fun hamXuatKiTu(User: User): Char {
         var listName1 = User.name.split(" ")

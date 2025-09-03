@@ -1034,7 +1034,7 @@ class ChucNang {
         toolBar.setBackgroundColor(newColor)  // Trực tiếp sử dụng mã màu ARGB
     }
 
-    fun updateBotronColor(activity: Activity, imageView: ImageView, imageView2: ImageView, imageView3: ImageView?) {
+    fun updateBotronColor(activity: Activity, imageView: ImageView, imageView3: ImageView) {
         val toolBar = activity.findViewById<Toolbar>(R.id.main_Toolbar)
 
         // Lấy màu hiện tại của Toolbar
@@ -1048,10 +1048,7 @@ class ChucNang {
             ContextCompat.getDrawable(activity, R.drawable.bovuong)?.mutate() as GradientDrawable
         drawable2.setColor(toolbarColor)
         imageView.background = drawable
-        imageView2.background = drawable2
-        if(imageView3 != null){
-            imageView3.background = drawable
-        }
+        imageView3.background = drawable2
     }
 
     fun showColorPickerDialog(activity: FragmentActivity, onColorSelected: (Int) -> Unit) {
