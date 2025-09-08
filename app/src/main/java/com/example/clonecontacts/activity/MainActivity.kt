@@ -11,6 +11,8 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -101,15 +103,20 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    private var soundPool: SoundPool? = null
+    private var clickSoundId: Int = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+        setupSoundPool()
         setupFullScreenMode()
         applySavedTheme()
+        requestPermissions()
         initializeUI()
         initializeCallListener()
-        requestPermissions()
+
 
         val userName = intent.getStringExtra("user_Shortcut_Name")
         val userMobile = intent.getStringExtra("user_Shortcut_Mobile")
@@ -173,31 +180,37 @@ class MainActivity : AppCompatActivity() {
         toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.vuongMien -> {
+                    playSound()
                     showColorPicker()
                     true
                 }
 
                 R.id.timKiem -> {
+                    playSound()
                     showSearchBar()
                     true
                 }
 
                 R.id.sapXepTheo -> {
+                    playSound()
                     showSortDialog()
                     true
                 }
 
                 R.id.nhapDanhBaTuTep -> {
+                    playSound()
                     importContactsFromFile()
                     true
                 }
 
                 R.id.themContact -> {
+                    playSound()
                     themContacts()
                     true
                 }
 
                 R.id.xuatDanhBaTuTep -> {
+                    playSound()
                     exportContactsToFile()
                     true
                 }
@@ -528,6 +541,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         callListener.stopListening()
+        release()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -593,6 +607,30 @@ class MainActivity : AppCompatActivity() {
                     ).show()
                 }
             }
+        }
+    }
+    private fun setupSoundPool() {
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(1)
+            .setAudioAttributes(audioAttributes)
+            .build()
+        clickSoundId = soundPool?.load(this, R.raw.click, 1) ?: 0
+    }
+
+    private fun playSound() {
+        soundPool!!.play(clickSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
+    }
+
+
+
+    fun release() {
+        if (soundPool != null) {
+            soundPool!!.release()
+            soundPool = null
         }
     }
 }

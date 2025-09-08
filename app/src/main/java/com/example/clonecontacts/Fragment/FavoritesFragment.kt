@@ -7,6 +7,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -47,6 +49,9 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     lateinit var addContacts: ImageView
     private var textWatcher: TextWatcher? = null // Store the TextWatcher
 
+    private var soundPool: SoundPool? = null
+    private var clickSoundId: Int = 0
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -61,6 +66,7 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         tangHoacGiam = arguments?.getBoolean("TangHoacGiam") ?: true
         firstOrLast = arguments?.getBoolean("FirstOrLast") ?: true
         yeuCauQuyenDayDu()
+        setupSoundPool()
         timKiem()
         keyboard = view.findViewById<ImageView>(R.id.favorites_Keyboard)
         val toolBar = activity?.findViewById<Toolbar>(R.id.main_Toolbar)
@@ -68,11 +74,13 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         // Lấy màu hiện tại của Toolbar
         val toolbarColor = (toolBar?.background as ColorDrawable).color
         keyboard.setOnClickListener {
+            playSound()
             ChucNang().open_KeyBroad(requireActivity())
         }
 
         addContacts = view.findViewById<ImageView>(R.id.favorites_add)
         addContacts.setOnClickListener {
+            playSound()
             themContactsYeuThich(dsUser_Favorites)
         }
     }
@@ -176,6 +184,7 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
             }
             editTextTimKiem.addTextChangedListener(textWatcher) // Add the TextWatcher
             nutThoat.setOnClickListener {
+                playSound()
                 editTextTimKiem.setText("")
                 val thanhTimKiem =
                     requireActivity().findViewById<EditText>(R.id.main_EdittextTimKiem)
@@ -213,6 +222,7 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         caidat.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.caiDat -> {
+                    playSound()
                     ChucNang().diaLog_CaiDat(requireActivity(), adapter)
                     true
                 }
@@ -492,6 +502,7 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                 yeuCauQuyenDayDu()
                 when (it.itemId) {
                     R.id.menu_Favorites_LongClickOne_ChinhSua -> {
+                        playSound()
                         val contactUri = ChucNang().getContactUriByPhoneNumber(
                             selectedUsers[0].mobile,
                             requireActivity()
@@ -510,6 +521,7 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
 
                     R.id.menu_Favorites_LongClickOne_ThemVaoNhom -> {
+                        playSound()
                         if (ContextCompat.checkSelfPermission(
                                 requireActivity(),
                                 android.Manifest.permission.WRITE_CONTACTS
@@ -531,16 +543,19 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
 
                     R.id.menu_Favorites_LongClickOne_ChiaSe -> {
+                        playSound()
                         ChucNang().chiaSe(selectedUsers[0], requireActivity())
                         true
                     }
 
                     R.id.menu_Favorites_LongClickOne_GuiSMS -> {
+                        playSound()
                         ChucNang().sendSMS(selectedUsers[0].mobile, "", requireActivity())
                         true
                     }
 
                     R.id.menu_Favorites_LongClickOne_GuiEmail -> {
+                        playSound()
                         val email =
                             ChucNang().getEmailFromPhone(requireActivity(), selectedUsers[0].mobile)
                         if (email != null) {
@@ -560,6 +575,7 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
 
                     R.id.menu_Favorites_LongClickOne_TaoPhimTat -> {
+                        playSound()
                         ChucNang().createShortcut(
                             selectedUsers[0],
                             ChucNang().traAnhDaiDien(selectedUsers[0].name),
@@ -569,11 +585,13 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
 
                     R.id.menu_Favorites_LongClickOne_ChonTatCa -> {
+                        playSound()
                         adapter.selectAll()
                         true
                     }
 
                     R.id.menu_Favorites_LongClickOne_LoaiBoKhoiMucYeuThich -> {
+                        playSound()
                         ChucNang().danhDauYeuThich(selectedUsers[0], requireActivity(), 0)
                         getContacts(tangHoacGiam, firstOrLast)
                         true
@@ -588,6 +606,7 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
             toolbar.setOnMenuItemClickListener {
                 when (it.itemId) {
                     R.id.menu_Favorites_LongClickMuch_ThemVaoNhom -> {
+                        playSound()
                         if (ContextCompat.checkSelfPermission(
                                 requireActivity(),
                                 android.Manifest.permission.WRITE_CONTACTS
@@ -609,11 +628,13 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
 
                     R.id.menu_Favorites_LongClickMuch_ChiaSe -> {
+                        playSound()
                         ChucNang().chiaSeNhieuUser(selectedUsers, requireActivity())
                         true
                     }
 
                     R.id.menu_Favorites_LongClickMuch_GuiSMS -> {
+                        playSound()
                         var phoneNumbers: List<String> = listOf()
                         for (user in selectedUsers) {
                             phoneNumbers += listOf(user.mobile)
@@ -626,6 +647,7 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
 
                     R.id.menu_Favorites_LongClickMuch_GuiEmail -> {
+                        playSound()
                         val intent = Intent(Intent.ACTION_SEND).apply {
                             type = "message/rfc822"  // Chỉ mở ứng dụng email
                             putExtra(Intent.EXTRA_SUBJECT, "Tiêu đề email")
@@ -637,11 +659,13 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     }
 
                     R.id.menu_Favorites_LongclickMuch_ChonTatCa -> {
+                        playSound()
                         adapter.selectAll()
                         true
                     }
 
                     R.id.menu_Favorites_LongclickMuch_LoaiBoKhoiMucYeuThich -> {
+                        playSound()
                         for (user in selectedUsers) {
                             ChucNang().danhDauYeuThich(user, requireActivity(), 0)
                         }
@@ -666,5 +690,32 @@ class FavoritesFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
 
     override fun onSelectedGroupsChanged(selectedGroups: MutableList<Group>) {
         TODO("Not yet implemented")
+    }
+    private fun setupSoundPool() {
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(1)
+            .setAudioAttributes(audioAttributes)
+            .build()
+        clickSoundId = soundPool?.load(getContext(), R.raw.click, 1) ?: 0
+    }
+
+    private fun playSound() {
+        soundPool!!.play(clickSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
+    }
+
+    // Quan trọng: giải phóng tài nguyên khi view bị hủy
+    override fun onDestroyView() {
+        super.onDestroyView()
+        release()
+    }
+    fun release() {
+        if (soundPool != null) {
+            soundPool!!.release()
+            soundPool = null
+        }
     }
 }

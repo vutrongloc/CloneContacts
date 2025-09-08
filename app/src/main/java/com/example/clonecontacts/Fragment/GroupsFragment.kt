@@ -9,6 +9,8 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -39,6 +41,10 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     lateinit var adapter: DsAdapter
     lateinit var keyboard: ImageView
     lateinit var add: ImageView
+
+    private var soundPool: SoundPool? = null
+    private var clickSoundId: Int = 0
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -52,10 +58,13 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         keyboard = view.findViewById<ImageView>(R.id.groups_Keyboard)
         add = view.findViewById<ImageView>(R.id.groups_add)
         yeuCauQuyenDayDu()
+        setupSoundPool()
         keyboard.setOnClickListener {
+            playSound()
             ChucNang().open_KeyBroad(requireActivity())
         }
         add.setOnClickListener {
+            playSound()
             diaLogAddGroup("Tạo một nhóm mới", Group())
         }
     }
@@ -166,6 +175,7 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         toolbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.menu_Group_XuatDanhBaTuTepVCF -> {
+                    playSound()
                     if (ContextCompat.checkSelfPermission(
                             requireActivity(),
                             android.Manifest.permission.WRITE_CONTACTS
@@ -219,6 +229,7 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                 }
 
                 R.id.menu_Group_NhapDanhBaTuTepVCF -> {
+                    playSound()
                     if (ContextCompat.checkSelfPermission(
                             requireContext(),
                             android.Manifest.permission.WRITE_CONTACTS
@@ -236,6 +247,7 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                 }
 
                 R.id.menu_Group_VuongMien -> {
+                    playSound()
                     ChucNang().showColorPickerDialog(requireActivity()) { color ->
                         doiMauUngDung(color)
                     }
@@ -243,6 +255,7 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                 }
 
                 R.id.menu_Group_CaiDat -> {
+                    playSound()
                     ChucNang().diaLog_CaiDat(requireActivity(), adapter)
                     true
                 }
@@ -358,6 +371,7 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         toolbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.menu_LongClickOneOrMuch_Group_DoiTen -> {
+                    playSound()
                     if (selectedGroups.size == 1) {
                         diaLogAddGroup("Thay đổi tên nhóm", selectedGroups[0])
                     }
@@ -366,11 +380,13 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                 }
 
                 R.id.menu_LongClickOneOrMuch_Group_SellectAll -> {
+                    playSound()
                     adapter.selectGroupsAll()
                     true
                 }
 
                 R.id.menu_LongClickOneOrMuch_Group_XoaBo -> {
+                    playSound()
                     for (group in selectedGroups) {
                         val groupID =
                             ChucNang().getGroupIDByNameGroup(group.nameGroup, requireActivity())
@@ -386,6 +402,7 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                 }
 
                 R.id.menu_Group_XuatDanhBaTuTepVCF -> {
+                    playSound()
                     if (ContextCompat.checkSelfPermission(
                             requireActivity(),
                             android.Manifest.permission.WRITE_CONTACTS
@@ -439,6 +456,7 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                 }
 
                 R.id.menu_Group_NhapDanhBaTuTepVCF -> {
+                    playSound()
                     if (ContextCompat.checkSelfPermission(
                             requireContext(),
                             android.Manifest.permission.WRITE_CONTACTS
@@ -456,6 +474,7 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                 }
 
                 R.id.menu_Group_VuongMien -> {
+                    playSound()
                     ChucNang().showColorPickerDialog(requireActivity()) { color ->
                         doiMauUngDung(color)
                     }
@@ -463,6 +482,7 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                 }
 
                 R.id.menu_Group_CaiDat -> {
+                    playSound()
                     ChucNang().diaLog_CaiDat(requireActivity(), adapter)
                     true
                 }
@@ -513,6 +533,35 @@ class GroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
             val intent = Intent(Intent.ACTION_GET_CONTENT)
             intent.type = "*/*"
             startActivityForResult(intent, PICK_VCF_REQUEST)
+        }
+    }
+
+    private fun setupSoundPool() {
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(1)
+            .setAudioAttributes(audioAttributes)
+            .build()
+        clickSoundId = soundPool?.load(getContext(), R.raw.click, 1) ?: 0
+    }
+
+    private fun playSound() {
+        soundPool!!.play(clickSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
+    }
+
+    // Quan trọng: giải phóng tài nguyên khi view bị hủy
+    override fun onDestroyView() {
+        super.onDestroyView()
+        release()
+    }
+
+    fun release() {
+        if (soundPool != null) {
+            soundPool!!.release()
+            soundPool = null
         }
     }
 }

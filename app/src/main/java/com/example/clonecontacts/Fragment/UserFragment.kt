@@ -6,6 +6,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.PorterDuff
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -33,6 +35,9 @@ class UserFragment : Fragment() {
     lateinit var toolbar: Toolbar
     lateinit var bottom: BottomNavigationView
 
+    private var soundPool: SoundPool? = null
+    private var clickSoundId: Int = 0
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -42,6 +47,7 @@ class UserFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        setupSoundPool()
         toolbar = requireActivity().findViewById<Toolbar>(R.id.main_Toolbar)
         bottom = requireActivity().findViewById<BottomNavigationView>(R.id.bottom)
         val user = arguments?.getSerializable("user") as User
@@ -57,19 +63,28 @@ class UserFragment : Fragment() {
         guiEmail(user.mobile)
         val nhanTin = view.findViewById<ImageView>(R.id.user_mess)
         nhanTin.setOnClickListener {
-            ChucNang().sendSMS(user.mobile, "",requireActivity())
+            playSound()
+            ChucNang().sendSMS(user.mobile, "", requireActivity())
         }
         val chinhSua = view.findViewById<ImageView>(R.id.user_pen)
         chinhSua.setOnClickListener {
+            playSound()
             chinhSua(user.mobile)
         }
         val delete = view.findViewById<ImageView>(R.id.user_delete)
         delete.setOnClickListener {
-            ChucNang().kiemTraQuyenGhiDanhBaDeXoaContacts(user.mobile,requireActivity(), user,true)
+            playSound()
+            ChucNang().kiemTraQuyenGhiDanhBaDeXoaContacts(
+                user.mobile,
+                requireActivity(),
+                user,
+                true
+            )
         }
         val chiaSe = view.findViewById<ImageView>(R.id.user_share)
         chiaSe.setOnClickListener {
-            ChucNang().chiaSe(user,requireActivity())
+            playSound()
+            ChucNang().chiaSe(user, requireActivity())
         }
         val danhDauYeuThich = view.findViewById<ImageView>(R.id.user_star)
         val contactId = getContactIdByPhoneNumber(user.mobile)
@@ -81,20 +96,22 @@ class UserFragment : Fragment() {
             }
         }
         danhDauYeuThich.setOnClickListener {
+            playSound()
             danhDauYeuThich(user.mobile, danhDauYeuThich)
         }
         val back = view.findViewById<ImageView>(R.id.user_back)
         back.setOnClickListener {
+            playSound()
             ChucNang().quayLaiFragment(requireActivity(), User())
         }
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    if(requireActivity().supportFragmentManager.popBackStackImmediate()){
+                    if (requireActivity().supportFragmentManager.popBackStackImmediate()) {
                         toolbar.visibility = View.VISIBLE
                         bottom.visibility = View.VISIBLE
-                    }else{
+                    } else {
                         requireActivity().finish()
                     }
                 }
@@ -103,15 +120,16 @@ class UserFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
     }
 
-    fun guiEmail(phoneNumber: String){
+    fun guiEmail(phoneNumber: String) {
         val email = view?.findViewById<TextView>(R.id.textView3)
         val emailFromFhone = ChucNang().getEmailFromPhone(requireActivity(), phoneNumber)
-        if (emailFromFhone != null){
+        if (emailFromFhone != null) {
             email?.setText(emailFromFhone)
             email?.setOnClickListener {
+                playSound()
                 ChucNang().moUngDungEmail(requireActivity(), listOf(emailFromFhone))
             }
-        }else{
+        } else {
             email?.setText("Không có email")
         }
     }
@@ -202,6 +220,7 @@ class UserFragment : Fragment() {
         }
         return null
     }
+
     fun chinhSua(phoneNumber: String) {
         val contactUri = getContactUriByPhoneNumber(phoneNumber)
         contactUri?.let {
@@ -241,6 +260,7 @@ class UserFragment : Fragment() {
         val icGoi = view?.findViewById<ImageView>(R.id.user_call)
         sdt?.setText(user.mobile)
         sdt?.setOnClickListener {
+            playSound()
             if (ContextCompat.checkSelfPermission(
                     requireActivity(),
                     android.Manifest.permission.CALL_PHONE
@@ -256,6 +276,7 @@ class UserFragment : Fragment() {
             }
         }
         icGoi?.setOnClickListener {
+            playSound()
             if (ContextCompat.checkSelfPermission(
                     requireActivity(),
                     android.Manifest.permission.CALL_PHONE
@@ -273,12 +294,21 @@ class UserFragment : Fragment() {
     }
 
     fun makeCall(user: User) {
-        val telecomManager = requireActivity().getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+        val telecomManager =
+            requireActivity().getSystemService(Context.TELECOM_SERVICE) as TelecomManager
         val uri = Uri.parse("tel:${user.mobile}")
         val extras = Bundle()
 
-        if (ContextCompat.checkSelfPermission(requireActivity(),android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.CALL_PHONE), 1)
+        if (ContextCompat.checkSelfPermission(
+                requireActivity(),
+                android.Manifest.permission.CALL_PHONE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(android.Manifest.permission.CALL_PHONE),
+                1
+            )
         } else {
             telecomManager.placeCall(uri, extras)
             // Chuyển sang OutgoingCallActivity
@@ -289,4 +319,32 @@ class UserFragment : Fragment() {
         }
     }
 
+    private fun setupSoundPool() {
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(1)
+            .setAudioAttributes(audioAttributes)
+            .build()
+        clickSoundId = soundPool?.load(getContext(), R.raw.click, 1) ?: 0
+    }
+
+    private fun playSound() {
+        soundPool!!.play(clickSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
+    }
+
+    // Quan trọng: giải phóng tài nguyên khi view bị hủy
+    override fun onDestroyView() {
+        super.onDestroyView()
+        release()
+    }
+
+    fun release() {
+        if (soundPool != null) {
+            soundPool!!.release()
+            soundPool = null
+        }
+    }
 }

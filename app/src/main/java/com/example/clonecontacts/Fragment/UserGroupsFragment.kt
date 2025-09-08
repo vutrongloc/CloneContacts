@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -32,6 +34,10 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     var dsUser: MutableList<User> = mutableListOf()
     var nameGroup = ""
     lateinit var adapter: DsAdapter
+
+    private var soundPool: SoundPool? = null
+    private var clickSoundId: Int = 0
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -41,6 +47,7 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        setupSoundPool()
         val dsUser = arguments?.getSerializable("dsUserGroup") as MutableList<User>
         nameGroup = arguments?.getString("tenGroup").toString()
         getContacts()
@@ -58,6 +65,7 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         val add = view.findViewById<ImageView>(R.id.user_Groups_add)
         add.background = drawable2
         add.setOnClickListener {
+            playSound()
             themContactVaoGroup()
         }
         super.onViewCreated(view, savedInstanceState)
@@ -243,6 +251,7 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         toolbar.inflateMenu(R.menu.menu_user_group)
         val guiSMS = toolbar.menu.findItem(R.id.menu_Group_Chat)
         guiSMS.setOnMenuItemClickListener{
+            playSound()
             val phoneNumbers = getGroupContacts(requireActivity(), nameGroup)
             if (phoneNumbers.isNotEmpty()) {
                 val uri = Uri.parse("sms:" + phoneNumbers.joinToString(","))
@@ -260,6 +269,7 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         }
         val guiemail = toolbar.menu.findItem(R.id.menu_Group_Email)
         guiemail.setOnMenuItemClickListener{
+            playSound()
             chiase(dsUser)
             true
         }
@@ -296,6 +306,7 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.menu_Group_Chat -> {
+                    playSound()
                     val phoneNumbers = getGroupContacts(requireActivity(), nameGroup)
                     if (phoneNumbers.isNotEmpty()) {
                         val uri = Uri.parse("sms:" + phoneNumbers.joinToString(","))
@@ -312,6 +323,7 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     true
                 }
                 R.id.menu_UserGroup_LongClickOneOrMuch_ChinhSua -> {
+                    playSound()
                     val contactUri = ChucNang().getContactUriByPhoneNumber(
                         selectedUsers[0].mobile,
                         requireActivity()
@@ -329,6 +341,7 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     true
                 }
                 R.id.menu_UserGroup_LongClickOneOrMuch_ChiaSe -> {
+                    playSound()
                     if(selectedUsers.size > 1){
                         ChucNang().chiaSeNhieuUser(selectedUsers, requireActivity())
                     }
@@ -338,6 +351,7 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     true
                 }
                 R.id.menu_UserGroup_LongClickOneOrMuch_GuiSMS -> {
+                    playSound()
                     var phoneNumbers:MutableList<String> = mutableListOf()
                     for(user in selectedUsers){
                         phoneNumbers.add(user.mobile)
@@ -357,20 +371,24 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
                     true
                 }
                 R.id.menu_UserGroup_LongClickOneOrMuch_GuiEmail -> {
+                    playSound()
                     chiase(selectedUsers)
                     true
                 }
                 R.id.menu_UserGroup_LongClickOneOrMuch_ChonTatCa -> {
+                    playSound()
                     adapter.selectAll()
                     true
                 }
                 R.id.menu_UserGroup_LongClickOneOrMuch_XoaBo -> {
+                    playSound()
                     for(user in selectedUsers){
                         ChucNang().deleteContact(requireContext(),user.mobile)
                     }
                     true
                 }
                 R.id.menu_UserGroup_LongClickOneOrMuch_LoaiBoKhoiNhom -> {
+                    playSound()
                     for(user in selectedUsers){
                         ChucNang().danhDauGroup(user, nameGroup,requireActivity(),"Ton tai thi xoa")
                     }
@@ -390,5 +408,32 @@ class UserGroupsFragment : Fragment(), DsAdapter.OnSelectedUsersChangeListener {
         TODO("Not yet implemented")
     }
 
+    private fun setupSoundPool() {
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(1)
+            .setAudioAttributes(audioAttributes)
+            .build()
+        clickSoundId = soundPool?.load(getContext(), R.raw.click, 1) ?: 0
+    }
 
+    private fun playSound() {
+        soundPool!!.play(clickSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
+    }
+
+    // Quan trọng: giải phóng tài nguyên khi view bị hủy
+    override fun onDestroyView() {
+        super.onDestroyView()
+        release()
+    }
+
+    fun release() {
+        if (soundPool != null) {
+            soundPool!!.release()
+            soundPool = null
+        }
+    }
 }
